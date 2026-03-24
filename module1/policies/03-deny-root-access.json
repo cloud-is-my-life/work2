@@ -1,0 +1,13 @@
+{
+    "Version": "2012-10-17",
+    "Id": "deny-root-access-policy",
+    "Statement": [
+        {
+            "Sid": "DenyRootAccess",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "elasticfilesystem:ClientRootAccess",
+            "Condition": {}
+        }
+    ]
+}

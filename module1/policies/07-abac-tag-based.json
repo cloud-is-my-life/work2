@@ -1,0 +1,31 @@
+{
+    "Version": "2012-10-17",
+    "Id": "abac-tag-based-policy",
+    "Statement": [
+        {
+            "Sid": "AllowByPrincipalTag",
+            "Effect": "Allow",
+            "Principal": { "AWS": "*" },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:PrincipalTag/Team": "app-team"
+                }
+            }
+        },
+        {
+            "Sid": "DenyWithoutRequiredTag",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "*",
+            "Condition": {
+                "StringNotEquals": {
+                    "aws:PrincipalTag/Team": "app-team"
+                }
+            }
+        }
+    ]
+}

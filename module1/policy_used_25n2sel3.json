@@ -1,0 +1,50 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowAppInstancesAccessToEFS",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::<ACCOUNT_ID>:role/wsi-ec2-efs-role"
+        },
+        "Action": [
+          "elasticfilesystem:ClientMount",
+          "elasticfilesystem:ClientWrite"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "Bool": {
+            "aws:SecureTransport": "true"
+          },
+          "StringEquals": {
+            "aws:PrincipalTag/AppRole": "wsi-app"
+          },
+          "IpAddress": {
+            "aws:SourceIp": [
+              "10.128.128.199/32",
+              "10.128.144.199/32"
+            ]
+          },
+          "DateGreaterThan": {
+            "aws:CurrentTime": "2025-06-04T03:00:00Z"
+          },
+          "DateLessThan": {
+            "aws:CurrentTime": "2025-06-11T18:00:00Z"
+          }
+        }
+      },
+      {
+        "Sid": "ExplicitlyDenyBastionAccess",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "*",
+        "Resource": "*",
+        "Condition": {
+          "IpAddress": {
+            "aws:SourceIp": "10.128.0.199/32"
+          }
+        }
+      }
+    ]
+  }
+  

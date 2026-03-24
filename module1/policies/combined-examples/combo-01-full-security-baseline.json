@@ -1,0 +1,56 @@
+{
+    "Version": "2012-10-17",
+    "Id": "full-security-baseline",
+    "Statement": [
+        {
+            "Sid": "EnforceTLS",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "*",
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        },
+        {
+            "Sid": "DenyRootAccess",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "elasticfilesystem:ClientRootAccess",
+            "Condition": {}
+        },
+        {
+            "Sid": "EnforceMountTargetAccess",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite",
+                "elasticfilesystem:ClientRootAccess"
+            ],
+            "Condition": {
+                "Bool": {
+                    "elasticfilesystem:AccessedViaMountTarget": "false"
+                }
+            }
+        },
+        {
+            "Sid": "AllowAppRoleReadWrite",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<ACCOUNT_ID>:role/<APP_ROLE>"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "Bool": {
+                    "elasticfilesystem:AccessedViaMountTarget": "true",
+                    "aws:SecureTransport": "true"
+                }
+            }
+        }
+    ]
+}

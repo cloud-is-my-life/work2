@@ -1,0 +1,34 @@
+{
+    "Version": "2012-10-17",
+    "Id": "restrict-by-ip-policy",
+    "Statement": [
+        {
+            "Sid": "AllowFromSpecificIPs",
+            "Effect": "Allow",
+            "Principal": { "AWS": "*" },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": [
+                        "10.0.1.0/24",
+                        "10.0.2.0/24"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "DenyFromBastionIP",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "*",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": "10.0.0.100/32"
+                }
+            }
+        }
+    ]
+}

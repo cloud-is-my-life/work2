@@ -1,0 +1,19 @@
+{
+    "Version": "2012-10-17",
+    "Id": "read-only-policy",
+    "Statement": [
+        {
+            "Sid": "AllowReadOnlyViaMountTarget",
+            "Effect": "Allow",
+            "Principal": { "AWS": "*" },
+            "Action": [
+                "elasticfilesystem:ClientMount"
+            ],
+            "Condition": {
+                "Bool": {
+                    "elasticfilesystem:AccessedViaMountTarget": "true"
+                }
+            }
+        }
+    ]
+}

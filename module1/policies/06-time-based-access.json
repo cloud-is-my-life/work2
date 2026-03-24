@@ -1,0 +1,25 @@
+{
+    "Version": "2012-10-17",
+    "Id": "time-based-access-policy",
+    "Statement": [
+        {
+            "Sid": "AllowDuringCompetitionWindow",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "DateGreaterThan": {
+                    "aws:CurrentTime": "2026-06-01T00:00:00Z"
+                },
+                "DateLessThan": {
+                    "aws:CurrentTime": "2026-06-30T23:59:59Z"
+                }
+            }
+        }
+    ]
+}

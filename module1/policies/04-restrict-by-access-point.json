@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Id": "restrict-by-access-point-policy",
+    "Statement": [
+        {
+            "Sid": "AllowOnlyViaSpecificAccessPoint",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<ACCOUNT_ID>:role/<ROLE_NAME>"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:<REGION>:<ACCOUNT_ID>:access-point/<AP_ID>"
+                }
+            }
+        }
+    ]
+}

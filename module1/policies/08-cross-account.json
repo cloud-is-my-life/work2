@@ -1,0 +1,22 @@
+{
+    "Version": "2012-10-17",
+    "Id": "cross-account-policy",
+    "Statement": [
+        {
+            "Sid": "AllowCrossAccountMount",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<EXTERNAL_ACCOUNT_ID>:root"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "true"
+                }
+            }
+        }
+    ]
+}

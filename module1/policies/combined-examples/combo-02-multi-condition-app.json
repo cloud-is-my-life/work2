@@ -1,0 +1,54 @@
+{
+    "Version": "2012-10-17",
+    "Id": "multi-condition-app-policy",
+    "Statement": [
+        {
+            "Sid": "EnforceTLS",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "*",
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        },
+        {
+            "Sid": "AllowAppViaAccessPointWithTagAndIP",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<ACCOUNT_ID>:role/<APP_ROLE>"
+            },
+            "Action": [
+                "elasticfilesystem:ClientMount",
+                "elasticfilesystem:ClientWrite"
+            ],
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "true"
+           },
+                "StringEquals": {
+                    "elasticfilesystem:AccessPointArn": "arn:aws:elasticfilesystem:<REGION>:<ACCOUNT_ID>:access-point/<AP_ID>",
+                    "aws:PrincipalTag/AppRole": "wsi-app"
+                },
+                "IpAddress": {
+                    "aws:SourceIp": [
+                        "10.0.1.0/24",
+                        "10.0.2.0/24"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "DenyBastionAccess",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "*",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": "10.0.0.100/32"
+                }
+            }
+        }
+    ]
+}

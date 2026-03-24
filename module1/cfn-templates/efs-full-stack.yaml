@@ -1,0 +1,419 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  EFS Full Stack - VPC + SG + EFS + Mount Targets + Access Point + EC2 (2AZ)
+  2026 Skills Competition Reference Template
+
+# ============================================================
+# 파라미터
+# ============================================================
+Parameters:
+  ProjectName:
+    Type: String
+    Default: wsi
+    Description: 리소스 네이밍 접두사
+
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+
+  SubnetACidr:
+    Type: String
+    Default: 10.0.1.0/24
+
+  SubnetCCidr:
+    Type: String
+    Default: 10.0.2.0/24
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+  EfsPerformanceMode:
+    Type: String
+    Default: generalPurpose
+    AllowedValues: [generalPurpose, maxIO]
+
+  EfsThroughputMode:
+    Type: String
+    Default: elastic
+    AllowedValues: [bursting, provisioned, elastic]
+
+  TransitionToIA:
+    Type: String
+    Default: AFTER_30_DAYS
+    AllowedValues:
+      - AFTER_1_DAY
+      - AFTER_7_DAYS
+      - AFTER_14_DAYS
+      - AFTER_30_DAYS
+      - AFTER_60_DAYS
+      - AFTER_90_DAYS
+
+  AccessPointPath:
+    Type: String
+    Default: /shared
+
+  PosixUid:
+    Type: String
+    Default: "1000"
+
+  PosixGid:
+    Type: String
+    Default: "1000"
+
+  MountPath:
+    Type: String
+    Default: /mnt/shared
+
+  KmsKeyAlias:
+    Type: String
+    Default: alias/wsi-efs-key
+    Description: KMS 키 별칭 (새로 생성됨)
+
+# ============================================================
+# 리소스
+# ============================================================
+Resources:
+
+  # ----------------------------------------------------------
+  # VPC & 네트워크
+  # ----------------------------------------------------------
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-efs-vpc
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-igw
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-public-rt
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetACidr
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-efs-sub-a
+
+  SubnetC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !Ref SubnetCCidr
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-efs-sub-c
+
+  SubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref SubnetC
+      RouteTableId: !Ref PublicRouteTable
+
+  # ----------------------------------------------------------
+  # 보안 그룹
+  # ----------------------------------------------------------
+  Ec2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub sg-${ProjectName}-ec2
+      GroupDescription: EC2 instances security group
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          Description: SSH access
+      Tags:
+        - Key: Name
+          Value: !Sub sg-${ProjectName}-ec2
+
+  EfsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub sg-${ProjectName}-efs
+      GroupDescription: EFS mount target security group - NFS from EC2 SG only
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref Ec2SecurityGroup
+          Description: NFS from EC2 instances only
+      Tags:
+        - Key: Name
+          Value: !Sub sg-${ProjectName}-efs
+
+  # ----------------------------------------------------------
+  # KMS 키 (EFS 암호화용)
+  # ----------------------------------------------------------
+  EfsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub KMS ke ${ProjectName} EFS encryption
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: EnableRootAccountAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+
+  EfsKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Ref KmsKeyAlias
+      TargetKeyId: !Ref EfsKmsKey
+
+  # ----------------------------------------------------------
+  # IAM Role (EC2 → EFS 접근용)
+  # ----------------------------------------------------------
+  Ec2EfsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-ec2-efs-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-ec2-efs-role
+        - Key: AppRole
+          Value: !Sub ${ProjectName}-app
+
+  Ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref Ec2EfsRole
+
+  # ----------------------------------------------------------
+  # EFS 파일 시스템
+  # ----------------------------------------------------------
+  EfsFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+      KmsKeyId: !GetAtt EfsKmsKey.Arn
+      PerformanceMode: !Ref EfsPerformanceMode
+      ThroughputMode: !Ref EfsThroughputMode
+      BackupPolicy:
+        Status: ENABLED
+      LifecyclePolicies:
+        - TransitionToIA: !Ref TransitionToIA
+        - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
+      FileSystemPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: EnforceTLS
+            Effect: Deny
+            Principal:
+              AWS: '*'
+            Action: '*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+          - Sid: DenyRootAccess
+            Effect: Deny
+            Principal:
+              AWS: '*'
+            Action: elasticfilesystem:ClientRootAccess
+          - Sid: AllowMountViaRole
+            Effect: Allow
+            Principal:
+              AWS: !GetAtt Ec2EfsRole.Arn
+            Action:
+              - elasticfilesystem:ClientMount
+              - elasticfilesystem:ClientWrite
+            Condition:
+              Bool:
+                elasticfilesystem:AccessedViaMountTarget: 'true'
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-shared-efs
+
+  # ----------------------------------------------------------
+  # Mount Targets (AZ별 1개)
+  # ----------------------------------------------------------
+  MountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SubnetId: !Ref SubnetA
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  MountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      SubnetId: !Ref SubnetC
+      SecurityGroups:
+        - !Ref EfsSecurityGroup
+
+  # ----------------------------------------------------------
+  # Access Point
+  # ----------------------------------------------------------
+  EfsAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref EfsFileSystem
+      PosixUser:
+        Uid: !Ref PosixUid
+        Gid: !Ref PosixGid
+      RootDirectory:
+        Path: !Ref AccessPointPath
+        CreationInfo:
+          OwnerUid: !Ref PosixUid
+          OwnerGid: !Ref PosixGid
+          Permissions: "0755"
+      AccessPointTags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-efs-ap
+
+  # ----------------------------------------------------------
+  # EC2 인스턴스 (2AZ)
+  # ----------------------------------------------------------
+  AppServerA:
+    Type: AWS::EC2::Instance
+    DependsOn: MountTargetA
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref SubnetA
+      SecurityGroupIds:
+        - !Ref Ec2SecurityGroup
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install -y amazon-efs-utils
+          mkdir -p ${MountPath}
+          mount -t efs -o tls,accesspoint=${EfsAccessPoint} ${EfsFileSystem}:/ ${MountPath}
+          echo "${EfsFileSystem}:/ ${MountPath} efs _netdev,tls,accesspoint=${EfsAccessPoint} 0 0" >> /etc/fstab
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-app-server-a
+
+  AppServerC:
+    Type: AWS::EC2::Instance
+    DependsOn: MountTargetC
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAmiId
+      SubnetId: !Ref SubnetC
+      SecurityGroupIds:
+        - !Ref Ec2SecurityGroup
+      IamInstanceProfile: !Ref Ec2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum install -y amazon-efs-utils
+          mkdir -p ${MountPath}
+          mount -t efs -o tls,accesspoint=${EfsAccessPoint} ${EfsFileSystem}:/ ${MountPath}
+          echo "${EfsFileSystem}:/ ${MountPath} efs _netdev,tls,accesspoint=${EfsAccessPoint} 0 0" >> /etc/fstab
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-app-server-c
+
+# ============================================================
+# 출력
+# ============================================================
+Outputs:
+  VpcId:
+    Value: !Ref Vpc
+    Description: VPC ID
+
+  FileSystemId:
+    Value: !Ref EfsFileSystem
+    Description: EFS File System ID
+
+  FileSystemDns:
+    Value: !Sub ${EfsFileSystem}.efs.${AWS::Region}.amazonaws.com
+    Description: EFS DNS Name
+
+  AccessPointId:
+    Value: !Ref EfsAccessPoint
+    Description: EFS Access Point ID
+
+  AccessPointArn:
+    Value: !GetAtt EfsAccessPoint.Arn
+    Description: EFS Access Point ARN
+
+  MountCommand:
+    Value: !Sub >-
+      sudo mount -t efs -o tls,accesspoint=${EfsAccessPoint} ${EfsFileSystem}:/ ${MountPath}
+    Description: EFS mount command
+
+  FstabEntry:
+    Value: !Sub >-
+      ${EfsFileSystem}:/ ${MountPath} efs _netdev,tls,accesspoint=${EfsAccessPoint} 0 0
+    Description: fstab entry for persistent mount
+
+  AppServerAId:
+    Value: !Ref AppServerA
+    Description: App Server A Instance ID
+
+  AppServerCId:
+    Value: !Ref AppServerC
+    Description: App Server C Instance ID
+
+  KmsKeyArn:
+    Value: !GetAtt EfsKmsKey.Arn
+    Description: KMS Key ARN used for EFS encryption
