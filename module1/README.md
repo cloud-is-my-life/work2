@@ -4,6 +4,8 @@
 
 ## 핵심 요약 (경기장에서 이것만 기억)
 
+> **!! ABAC 함정 !!** IAM Role에 FullAccess/ReadWriteAccess 붙어있으면 File System Policy의 태그 조건(Allow)을 **우회**해버림. ABAC 강제하려면 **반드시 Deny + StringNotEquals로 태그 없는 놈 차단** 걸어야 함. Allow만으로는 안 됨!
+
 - `-o iam` = IAM Role 신분증 제시. Principal에 Role ARN 있으면 필수, `*`이면 불필요.
 - 같은 계정 내에서 IAM Role Policy든 EFS File System Policy든 **둘 중 하나만 Allow면 접근 가능.** Deny는 무조건 우선.
 - File System Policy 없으면 EFS는 **기본 전체 허용.** 정책 붙이는 순간 명시적 Allow 필요.

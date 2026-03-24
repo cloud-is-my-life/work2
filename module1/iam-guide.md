@@ -212,6 +212,38 @@ AppServer:
 
 ## 6. ABAC (태그 기반 접근 제어)
 
+> **!! ABAC 함정 !!** Allow만으로는 ABAC 강제 안 됨. IAM Role에 FullAccess/ReadWriteAccess 붙어있으면 태그 조건 Allow를 우회해버림. **반드시 Deny + StringNotEquals로 태그 없는 놈 차단해야 함.**
+
+```json
+{
+    "Statement": [
+        {
+            "Sid": "AllowWithTag",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": ["elasticfilesystem:ClientMount", "elasticfilesystem:ClientWrite"],
+            "Condition": {
+                "StringEquals": { "aws:PrincipalTag/Team": "engineering" }
+            }
+        },
+        {
+            "Sid": "DenyWithoutTag",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "*",
+            "Condition": {
+                "StringNotEquals": { "aws:PrincipalTag/Team": "engineering" }
+            }
+        }
+    ]
+}
+```
+
+| 방식 | IAM FullAccess 있으면? |
+|------|---|
+| Allow만 (태그 있으면 허용) | **우회됨** — IAM Policy Allow로 그냥 통과 |
+| Allow + Deny 세트 (태그 없으면 거부) | **강제됨** — Deny가 무조건 우선 |
+
 ### aws:PrincipalTag는 IAM Role 태그만 본다
 
 ```
