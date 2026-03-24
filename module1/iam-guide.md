@@ -4,6 +4,16 @@
 
 ---
 
+## 0. 핵심 요약 (경기장에서 이것만 기억)
+
+- **`-o iam` = 신분증 제시.** 안 쓰면 EFS가 니가 누군지 모름 (익명). 쓰면 IAM Role로 인증.
+- **같은 계정 내에서는 IAM Role Policy든 EFS File System Policy든 둘 중 하나만 Allow면 접근 가능.** 둘 다 없으면 거부. Deny는 어디에 있든 무조건 우선.
+- **File System Policy에 특정 Role ARN이 Principal이면 `-o iam` 필수.** Principal: * 이면 `-o iam` 없어도 OK.
+- **ABAC(태그 기반)은 IAM Role 태그만 본다.** EC2 인스턴스 태그는 EFS가 안 봄.
+- **File System Policy가 아예 없으면 EFS는 기본적으로 모든 마운트 허용.** 정책을 붙이는 순간부터 명시적 Allow 필요.
+
+---
+
 ## 1. EFS 접근 시 IAM 인증 흐름
 
 ```
