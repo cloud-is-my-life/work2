@@ -1,0 +1,48 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GlueCatalog",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:CreateTable",
+        "glue:UpdateTable",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:CreatePartition",
+        "glue:BatchCreatePartition",
+        "glue:UpdatePartition",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchGetPartition",
+        "glue:ImportCatalogToGlue"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3Access",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::DATA-BUCKET",
+        "arn:aws:s3:::DATA-BUCKET/*"
+      ]
+    },
+    {
+      "Sid": "GlueLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}

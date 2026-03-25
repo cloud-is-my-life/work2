@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Athena WorkGroup with encrypted results and scan cutoff
+
+Parameters:
+  ResultsBucketName:
+    Type: String
+  KmsKeyArn:
+    Type: String
+  WorkGroupName:
+    Type: String
+    Default: secure-athena-wg
+  BytesScannedCutoffPerQuery:
+    Type: Number
+    Default: 104857600
+
+Resources:
+  ResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: ResultsBucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID:
+                Ref: KmsKeyArn
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  AthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name:
+        Ref: WorkGroupName
+      Description: Secure Athena workgroup for competition practice
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: true
+        BytesScannedCutoffPerQuery:
+          Ref: BytesScannedCutoffPerQuery
+        EngineVersion:
+          SelectedEngineVersion: Athena engine version 3
+        ResultConfiguration:
+          OutputLocation:
+            Fn::Sub: s3://${ResultsBucketName}/athena-results/
+          EncryptionConfiguration:
+            EncryptionOption: SSE_KMS
+            KmsKey:
+              Ref: KmsKeyArn
+
+Outputs:
+  WorkGroupName:
+    Value:
+      Ref: AthenaWorkGroup
+  ResultsLocation:
+    Value:
+      Fn::Sub: s3://${ResultsBucketName}/athena-results/

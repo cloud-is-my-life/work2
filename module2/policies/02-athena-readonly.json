@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AthenaReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:ListQueryExecutions",
+        "athena:ListNamedQueries",
+        "athena:GetNamedQuery",
+        "athena:GetWorkGroup",
+        "athena:ListWorkGroups",
+        "athena:BatchGetQueryExecution"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GlueReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase",
+        "glue:GetDatabases",
+        "glue:GetTable",
+        "glue:GetTables",
+        "glue:GetPartition",
+        "glue:GetPartitions",
+        "glue:BatchGetPartition"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3ReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::DATA-BUCKET",
+        "arn:aws:s3:::DATA-BUCKET/*",
+        "arn:aws:s3:::RESULTS-BUCKET",
+        "arn:aws:s3:::RESULTS-BUCKET/*"
+      ]
+    }
+  ]
+}

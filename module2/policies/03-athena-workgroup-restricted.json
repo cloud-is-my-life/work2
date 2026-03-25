@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSpecificWorkgroup",
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:StopQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:GetWorkGroup"
+      ],
+      "Resource": "arn:aws:athena:REGION:ACCOUNT:workgroup/WORKGROUP-NAME"
+    },
+    {
+      "Sid": "DenyPrimaryWorkgroup",
+      "Effect": "Deny",
+      "Action": "athena:*",
+      "Resource": "arn:aws:athena:REGION:ACCOUNT:workgroup/primary"
+    }
+  ]
+}

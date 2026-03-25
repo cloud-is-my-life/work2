@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Basic Glue database and crawler for S3 data cataloging
+
+Parameters:
+  DataBucketName:
+    Type: String
+  DataPrefix:
+    Type: String
+    Default: data/
+  DatabaseName:
+    Type: String
+    Default: query_from_s3_db
+  CrawlerName:
+    Type: String
+    Default: query-from-s3-crawler
+
+Resources:
+  GlueDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId:
+        Ref: AWS::AccountId
+      DatabaseInput:
+        Name:
+          Ref: DatabaseName
+        Description: Competition practice database
+        LocationUri:
+          Fn::Sub: s3://${DataBucketName}/${DataPrefix}
+
+  GlueCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: AWSGlueServiceRole-${CrawlerName}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: DataBucketAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  - Fn::Sub: arn:aws:s3:::${DataBucketName}
+                  - Fn::Sub: arn:aws:s3:::${DataBucketName}/*
+
+  GlueCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name:
+        Ref: CrawlerName
+      Role:
+        Fn::GetAtt:
+          - GlueCrawlerRole
+          - Arn
+      DatabaseName:
+        Ref: GlueDatabase
+      Description: Basic S3 crawler for competition practice
+      TablePrefix: raw_
+      Targets:
+        S3Targets:
+          - Path:
+              Fn::Sub: s3://${DataBucketName}/${DataPrefix}
+            Exclusions:
+              - '**.tmp'
+              - '_temporary/**'
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_NEW_FOLDERS_ONLY
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      Schedule:
+        ScheduleExpression: cron(0 */6 * * ? *)
+
+Outputs:
+  DatabaseName:
+    Value:
+      Ref: DatabaseName
+  CrawlerName:
+    Value:
+      Ref: GlueCrawler
+  GlueCrawlerRoleArn:
+    Value:
+      Fn::GetAtt:
+        - GlueCrawlerRole
+        - Arn
