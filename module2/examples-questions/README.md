@@ -8,3 +8,7 @@
 | 4 | `q04-alb-errors-ctas.md` | ALB 5xx + CTAS 최적화 | ★★★ |
 | 5 | `q05-cross-account-kms.md` | 크로스계정 + KMS | ★★★★ |
 | 6 | `q06-mixed-query-from-s3.md` | Athena + S3 Select + 성능 최적화 | ★★★★ |
+
+---
+
+- 정답 풀이 모음: [`answers/`](./answers/)
