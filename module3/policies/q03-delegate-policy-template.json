@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateUserOnlyWithBoundary",
+      "Effect": "Allow",
+      "Action": "iam:CreateUser",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/MOD3_Q03_*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "BOUNDARY_ARN"
+        }
+      }
+    },
+    {
+      "Sid": "AllowAttachPolicyToScopedUsers",
+      "Effect": "Allow",
+      "Action": "iam:AttachUserPolicy",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/MOD3_Q03_*"
+    },
+    {
+      "Sid": "DenyAttachAdministratorAccess",
+      "Effect": "Deny",
+      "Action": "iam:AttachUserPolicy",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/MOD3_Q03_*",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": "arn:aws:iam::aws:policy/AdministratorAccess"
+        }
+      }
+    }
+  ]
+}
