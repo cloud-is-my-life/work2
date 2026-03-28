@@ -1,0 +1,188 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Lambda + RDS MySQL Full Stack (SAM)
+
+# 배포 명령:
+#   sam build
+#   sam deploy \
+#     --stack-name my-lambda-rds-stack \
+#     --capabilities CAPABILITY_IAM \
+#     --region ap-northeast-2 \
+#     --resolve-s3 \
+#     --parameter-overrides \
+#       VpcId=vpc-xxxx \
+#       PrivateSubnet1=subnet-xxxx \
+#       PrivateSubnet2=subnet-yyyy
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID (SAM은 VPC를 자동 생성하지 않음)
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 1 (AZ-a)
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Private Subnet 2 (AZ-b)
+
+  DBUsername:
+    Type: String
+    Default: admin
+    NoEcho: true
+
+  DBPassword:
+    Type: String
+    Default: changeme123!
+    NoEcho: true
+
+# 모든 Lambda 함수에 공통 적용되는 기본값
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    VpcConfig:
+      SecurityGroupIds:
+        - !Ref LambdaSG
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+    Layers:
+      - !Ref PymysqlLayer
+    Environment:
+      Variables:
+        DB_HOST: !GetAtt MyRDS.Endpoint.Address
+        DB_NAME: mydb
+        DB_USER: !Ref DBUsername
+        DB_PASS: !Ref DBPassword
+
+Resources:
+
+  # ─── 보안 그룹 ──────────────────────────────────────────────
+
+  LambdaSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Lambda Security Group
+      VpcId: !Ref VpcId
+      # 아웃바운드 규칙은 SecurityGroupEgress로 별도 분리 (순환 참조 방지)
+
+  RdsSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RDS Security Group
+      VpcId: !Ref VpcId
+
+  # 순환 참조 방지: SG 인바운드 규칙을 별도 리소스로 분리
+  RdsSGIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref RdsSG
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref LambdaSG
+
+  LambdaSGEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId: !Ref LambdaSG
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      DestinationSecurityGroupId: !Ref RdsSG
+
+  # ─── Secrets Manager ────────────────────────────────────────
+
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: lambda-rds-credentials
+      SecretString: !Sub |
+        {"username":"${DBUsername}","password":"${DBPassword}"}
+
+  # ─── RDS ────────────────────────────────────────────────────
+
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  MyRDS:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      DBInstanceIdentifier: my-lambda-rds
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      EngineVersion: "8.0"
+      MasterUsername: !Ref DBUsername
+      # Secrets Manager 동적 참조로 비밀번호 주입 (하드코딩 없음)
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DBSecret}:SecretString:password}}"
+      DBName: mydb
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RdsSG
+      MultiAZ: false
+      AllocatedStorage: "20"
+      StorageType: gp2
+      PubliclyAccessible: false
+
+  # ─── Lambda Layer ────────────────────────────────────────────
+
+  PymysqlLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: pymysql-layer
+      ContentUri: ./layer/    # sam build 시 python/ 디렉토리 포함
+      CompatibleRuntimes:
+        - python3.11
+    Metadata:
+      BuildMethod: python3.11
+
+  # ─── Lambda 함수 ─────────────────────────────────────────────
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: MyRDS    # RDS가 먼저 생성되어야 엔드포인트 참조 가능
+    Properties:
+      FunctionName: lambda-rds-api
+      Handler: app.handler
+      CodeUri: ./src/
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - AWSLambdaBasicExecutionRole
+      Events:
+        GetEmployees:
+          Type: Api
+          Properties:
+            Path: /employees
+            Method: get
+        PostEmployees:
+          Type: Api
+          Properties:
+            Path: /employees
+            Method: post
+
+# ─── 출력값 ────────────────────────────────────────────────────
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+
+  RDSEndpoint:
+    Description: RDS MySQL endpoint
+    Value: !GetAtt MyRDS.Endpoint.Address
+
+  LambdaArn:
+    Description: Lambda function ARN
+    Value: !GetAtt ApiFunction.Arn
+
+  LayerArn:
+    Description: pymysql Layer ARN
+    Value: !Ref PymysqlLayer
