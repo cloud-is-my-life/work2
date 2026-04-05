@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstancesFromLaunchTemplate",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/*",
+        "arn:aws:ec2:AWS_REGION::image/ami-*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:launch-template/*"
+      ],
+      "Condition": {
+        "Bool": {
+          "ec2:IsLaunchTemplateResource": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyRunWithoutLaunchTemplate",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "Bool": {
+          "ec2:IsLaunchTemplateResource": "false"
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribe",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:DescribeLaunchTemplateVersions"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

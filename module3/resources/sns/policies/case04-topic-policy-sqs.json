@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSQSSubscription",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "sqs.amazonaws.com"
+      },
+      "Action": "sns:Subscribe",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "AllowCrossAccountPublish",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::EXTERNAL_ACCOUNT_ID:root"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "ORG_ID"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyDeleteAndPurge",
+      "Effect": "Deny",
+      "Action": [
+        "sqs:DeleteQueue",
+        "sqs:PurgeQueue"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:prod-*"
+    }
+  ]
+}

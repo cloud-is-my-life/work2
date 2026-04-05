@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowOwnItemsByLeadingKeys",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribeTable",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

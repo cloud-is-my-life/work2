@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowTopicManagement",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:SetTopicAttributes",
+        "sns:GetTopicAttributes",
+        "sns:ListTopics",
+        "sns:TagResource",
+        "sns:UntagResource",
+        "sns:Subscribe",
+        "sns:Publish"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDeleteTopic",
+      "Effect": "Deny",
+      "Action": [
+        "sns:DeleteTopic",
+        "sns:RemovePermission"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadConfidentialFalse",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:ExistingObjectTag/Confidential": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyReadConfidentialTrue",
+      "Effect": "Deny",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:ExistingObjectTag/Confidential": "true"
+        }
+      }
+    },
+    {
+      "Sid": "RequireTagOnUpload",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "Null": {
+          "s3:RequestObjectTag/Confidential": "true"
+        }
+      }
+    }
+  ]
+}

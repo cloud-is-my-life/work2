@@ -1,0 +1,43 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SecretsManagerRotationPermissions",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:PutSecretValue",
+        "secretsmanager:UpdateSecretVersionStage"
+      ],
+      "Resource": "arn:aws:secretsmanager:AWS_REGION:ACCOUNT_ID:secret:SECRET_NAME-??????"
+    },
+    {
+      "Sid": "GetRandomPassword",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetRandomPassword",
+      "Resource": "*"
+    },
+    {
+      "Sid": "KMSDecryptForSecret",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KMS_KEY_ID"
+    },
+    {
+      "Sid": "VPCNetworkAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DetachNetworkInterface"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

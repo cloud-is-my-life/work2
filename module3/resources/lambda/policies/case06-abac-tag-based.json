@@ -1,0 +1,50 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowInvokeMatchingTeamTag",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction",
+        "lambda:GetFunction"
+      ],
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Team": "${aws:PrincipalTag/Team}"
+        }
+      }
+    },
+    {
+      "Sid": "AllowListFunctions",
+      "Effect": "Allow",
+      "Action": "lambda:ListFunctions",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyUntaggedPrincipal",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:InvokeFunction",
+        "lambda:UpdateFunctionCode"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Team": "true"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceTagOnCreate",
+      "Effect": "Deny",
+      "Action": "lambda:CreateFunction",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Team": "true"
+        }
+      }
+    }
+  ]
+}

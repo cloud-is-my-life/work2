@@ -1,0 +1,98 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "IAM Path 기반 위임. 팀별 경로(/teamA/*)에서만 역할/정책 생성·관리 허용. 다른 팀 경로 접근 차단. PassRole도 자기 팀 경로로 제한.",
+  "Statement": [
+    {
+      "Sid": "AllowCreateRoleInTeamPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/TEAM_PATH/*"
+    },
+    {
+      "Sid": "AllowAttachDetachPolicyInTeamPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/TEAM_PATH/*",
+      "Condition": {
+        "ArnLike": {
+          "iam:PolicyARN": "arn:aws:iam::ACCOUNT_ID:policy/TEAM_PATH/*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowRoleManagementInTeamPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:DeleteRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:UpdateRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/TEAM_PATH/*"
+    },
+    {
+      "Sid": "AllowPolicyManagementInTeamPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicyVersions",
+        "iam:SetDefaultPolicyVersion",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:policy/TEAM_PATH/*"
+    },
+    {
+      "Sid": "AllowPassRoleInTeamPathOnly",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/TEAM_PATH/*"
+    },
+    {
+      "Sid": "AllowIAMRead",
+      "Effect": "Allow",
+      "Action": [
+        "iam:Get*",
+        "iam:List*",
+        "iam:SimulatePrincipalPolicy",
+        "iam:SimulateCustomPolicy"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyAccessToOtherTeamPaths",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:UpdateRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/security/*",
+        "arn:aws:iam::ACCOUNT_ID:role/admin/*",
+        "arn:aws:iam::ACCOUNT_ID:role/aws-service-role/*"
+      ]
+    }
+  ]
+}

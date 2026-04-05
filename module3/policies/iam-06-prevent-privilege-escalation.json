@@ -1,0 +1,105 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "권한 상승 방지 정책. 21가지 권한 상승 벡터를 Deny로 차단. SCP 또는 위임 관리자 Boundary에 추가하여 사용.",
+  "Statement": [
+    {
+      "Sid": "DenyPolicyVersionManipulation",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotEquals": {
+          "aws:PrincipalArn": "arn:aws:iam::ACCOUNT_ID:role/ADMIN_ROLE_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "DenyAttachHighPrivilegePolicies",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachUserPolicy",
+        "iam:AttachGroupPolicy",
+        "iam:AttachRolePolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": [
+            "arn:aws:iam::aws:policy/AdministratorAccess",
+            "arn:aws:iam::aws:policy/PowerUserAccess",
+            "arn:aws:iam::aws:policy/IAMFullAccess"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyInlinePolicyOnOthers",
+      "Effect": "Deny",
+      "Action": [
+        "iam:PutUserPolicy",
+        "iam:PutGroupPolicy",
+        "iam:PutRolePolicy"
+      ],
+      "NotResource": [
+        "arn:aws:iam::ACCOUNT_ID:user/${aws:username}",
+        "arn:aws:iam::ACCOUNT_ID:role/TEAM_PATH/*"
+      ]
+    },
+    {
+      "Sid": "DenyCredentialTheft",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateAccessKey",
+        "iam:CreateLoginProfile",
+        "iam:UpdateLoginProfile"
+      ],
+      "NotResource": "arn:aws:iam::*:user/${aws:username}"
+    },
+    {
+      "Sid": "DenyGroupMembership",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AddUserToGroup",
+        "iam:RemoveUserFromGroup"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotEquals": {
+          "aws:PrincipalArn": "arn:aws:iam::ACCOUNT_ID:role/ADMIN_ROLE_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "DenyTrustPolicyModification",
+      "Effect": "Deny",
+      "Action": "iam:UpdateAssumeRolePolicy",
+      "Resource": "*",
+      "Condition": {
+        "ArnNotEquals": {
+          "aws:PrincipalArn": "arn:aws:iam::ACCOUNT_ID:role/ADMIN_ROLE_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPassRoleToHighPrivilegeServices",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "cloudformation.amazonaws.com",
+            "datapipeline.amazonaws.com",
+            "glue.amazonaws.com"
+          ]
+        },
+        "ArnNotEquals": {
+          "aws:PrincipalArn": "arn:aws:iam::ACCOUNT_ID:role/ADMIN_ROLE_NAME"
+        }
+      }
+    }
+  ]
+}

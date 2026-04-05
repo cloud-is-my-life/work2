@@ -1,0 +1,43 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPassRoleToLambdaOnly",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/app-roles/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "lambda.amazonaws.com",
+            "ec2.amazonaws.com",
+            "ecs-tasks.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyPassRoleToIAMOrSTS",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "iam:PassedToService": [
+            "iam.amazonaws.com",
+            "sts.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyPassHighPrivilegeRoles",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/Admin*",
+        "arn:aws:iam::ACCOUNT_ID:role/FullAccess*"
+      ]
+    }
+  ]
+}

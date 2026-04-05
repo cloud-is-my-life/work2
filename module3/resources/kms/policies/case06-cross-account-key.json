@@ -1,0 +1,39 @@
+{
+  "_comment_key_policy": "소유 계정(ACCOUNT_A)의 Key Policy에 추가할 Statement",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCrossAccountKeyUse",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_B_ID:root"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowCrossAccountGrant",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_B_ID:root"
+      },
+      "Action": [
+        "kms:CreateGrant",
+        "kms:ListGrants",
+        "kms:RevokeGrant"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "kms:GrantIsForAWSResource": "true"
+        }
+      }
+    }
+  ]
+}

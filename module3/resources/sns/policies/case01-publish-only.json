@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPublishToSpecificTopic",
+      "Effect": "Allow",
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME"
+    },
+    {
+      "Sid": "AllowListTopicsReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListTopics",
+        "sns:GetTopicAttributes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

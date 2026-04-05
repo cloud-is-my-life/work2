@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstancesWithTags",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Environment": ["dev", "staging", "production"],
+          "aws:RequestTag/Owner": "${aws:username}"
+        },
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": ["Environment", "Owner", "Name"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowRunInstancesSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/*",
+        "arn:aws:ec2:AWS_REGION::image/ami-*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*"
+      ]
+    },
+    {
+      "Sid": "AllowCreateTagsOnLaunch",
+      "Effect": "Allow",
+      "Action": "ec2:CreateTags",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:*/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:CreateAction": "RunInstances"
+        }
+      }
+    },
+    {
+      "Sid": "DenyRunWithoutRequiredTags",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Environment": "true"
+        }
+      }
+    }
+  ]
+}

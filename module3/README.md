@@ -28,6 +28,7 @@
 | 2 | 예시 과제 (예상 출제형) | [examples-questions/](./examples-questions/) |
 | 3 | 예시 과제 정답 풀이 | [examples-questions/answers/](./examples-questions/answers/) |
 | 4 | 정책 JSON 템플릿 | [policies/](./policies/) |
+| 5 | 리소스별 확장 실전 케이스 | [resources/](./resources/) |
 
 ---
 
@@ -53,6 +54,10 @@
 ### 타입 E — 정책 시뮬레이션 + 실호출 교차검증
 - `simulate-principal-policy` 결과 제출
 - 같은 시나리오를 실제 AWS CLI 호출로 재검증
+
+### 타입 F — 멀티 리소스 복합 시나리오
+- SQS + KMS + SNS/S3/EventBridge 조합처럼 Resource-based policy와 Identity-based policy를 동시에 설계
+- IAM policy만으로 해결 안 되는 케이스(Queue policy, Key policy, Secret resource policy) 분리 설계 요구
 
 ---
 

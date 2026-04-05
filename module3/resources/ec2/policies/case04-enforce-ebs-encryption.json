@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstances",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/*",
+        "arn:aws:ec2:AWS_REGION::image/ami-*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*"
+      ]
+    },
+    {
+      "Sid": "AllowRunInstancesEncryptedVolumesOnly",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUnencryptedVolumes",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    }
+  ]
+}

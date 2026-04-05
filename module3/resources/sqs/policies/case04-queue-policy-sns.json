@@ -1,0 +1,21 @@
+{
+  "_comment": "Queue Policy (sqs:SetQueueAttributes로 적용)",
+  "Version": "2012-10-17",
+  "Id": "SNSToSQSPolicy",
+  "Statement": [
+    {
+      "Sid": "AllowSNSToSend",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "sns.amazonaws.com"
+      },
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME"
+        }
+      }
+    }
+  ]
+}

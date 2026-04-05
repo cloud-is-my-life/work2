@@ -1,0 +1,134 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "위임 관리자(Delegated Admin)용 정책. CreateRole/CreateUser 시 반드시 Boundary 첨부 강제. Boundary 정책 자체 수정/삭제 차단. 관리자 자신 보호.",
+  "Statement": [
+    {
+      "Sid": "AllowCreateRoleOnlyWithBoundary",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:PutRolePermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/BOUNDARY_POLICY_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "AllowCreateUserOnlyWithBoundary",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateUser",
+        "iam:PutUserPermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/BOUNDARY_POLICY_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "AllowAttachPolicyOnlyWithBoundary",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:DeleteUserPolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/BOUNDARY_POLICY_NAME"
+        }
+      }
+    },
+    {
+      "Sid": "AllowGeneralIAMRead",
+      "Effect": "Allow",
+      "Action": [
+        "iam:Get*",
+        "iam:List*",
+        "iam:SimulatePrincipalPolicy",
+        "iam:SimulateCustomPolicy",
+        "iam:GenerateServiceLastAccessedDetails"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowCreateAndManagePolicy",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:policy/*"
+    },
+    {
+      "Sid": "AllowDeleteRoleAndUser",
+      "Effect": "Allow",
+      "Action": [
+        "iam:DeleteRole",
+        "iam:DeleteUser",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateRole",
+        "iam:UpdateRoleDescription",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "NotResource": "arn:aws:iam::ACCOUNT_ID:user/ADMIN_USER_NAME"
+    },
+    {
+      "Sid": "DenyBoundaryDeletion",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:DeleteUserPermissionsBoundary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyBoundaryPolicyModification",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion"
+      ],
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:policy/BOUNDARY_POLICY_NAME",
+        "arn:aws:iam::ACCOUNT_ID:policy/DELEGATED_ADMIN_BOUNDARY_POLICY_NAME"
+      ]
+    },
+    {
+      "Sid": "DenyHighPrivilegePolicyAttachment",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:AttachUserPolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": [
+            "arn:aws:iam::aws:policy/AdministratorAccess",
+            "arn:aws:iam::aws:policy/PowerUserAccess",
+            "arn:aws:iam::aws:policy/IAMFullAccess"
+          ]
+        }
+      }
+    }
+  ]
+}

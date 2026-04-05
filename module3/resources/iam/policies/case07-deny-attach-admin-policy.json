@@ -1,0 +1,52 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAttachPoliciesExceptAdmin",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy"
+      ],
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/app-roles/*",
+        "arn:aws:iam::ACCOUNT_ID:user/dev-team/*"
+      ]
+    },
+    {
+      "Sid": "DenyAttachHighPrivilegePolicies",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:AttachUserPolicy",
+        "iam:AttachGroupPolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnEquals": {
+          "iam:PolicyARN": [
+            "arn:aws:iam::aws:policy/AdministratorAccess",
+            "arn:aws:iam::aws:policy/IAMFullAccess",
+            "arn:aws:iam::aws:policy/PowerUserAccess"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyAttachCustomFullAccessPolicies",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:AttachUserPolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "iam:PolicyARN": "arn:aws:iam::ACCOUNT_ID:policy/FullAccess*"
+        }
+      }
+    }
+  ]
+}

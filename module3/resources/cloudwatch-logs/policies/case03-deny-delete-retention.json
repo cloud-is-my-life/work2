@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyDeleteLogGroup",
+      "Effect": "Deny",
+      "Action": [
+        "logs:DeleteLogGroup",
+        "logs:DeleteLogStream"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:/app/prod/*:*"
+    },
+    {
+      "Sid": "DenyChangeRetention",
+      "Effect": "Deny",
+      "Action": [
+        "logs:PutRetentionPolicy",
+        "logs:DeleteRetentionPolicy"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:/app/prod/*"
+    }
+  ]
+}

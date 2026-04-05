@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAccessByEnvTag",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Environment": "${aws:PrincipalTag/Environment}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyIfEnvTagMissing",
+      "Effect": "Deny",
+      "Action": "sqs:*",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Environment": "true"
+        }
+      }
+    }
+  ]
+}

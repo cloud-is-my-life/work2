@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "태그 기반 역할 가정(ABAC). iam:ResourceTag로 특정 태그가 붙은 역할만 AssumeRole 허용. 팀/환경별 역할 분리에 사용.",
+  "Statement": [
+    {
+      "Sid": "AssumeRoleByProjectTag",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Project": "${aws:PrincipalTag/Project}"
+        }
+      }
+    },
+    {
+      "Sid": "AssumeRoleByEnvironmentTag",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Environment": "${aws:PrincipalTag/Environment}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyAssumeRoleIfTagMissing",
+      "Effect": "Deny",
+      "Action": "sts:AssumeRole",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Project": "true"
+        }
+      }
+    }
+  ]
+}

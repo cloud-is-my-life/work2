@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPartiQLFullTableScan",
+      "Effect": "Deny",
+      "Action": "dynamodb:PartiQLSelect",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "Bool": {
+          "dynamodb:FullTableScan": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowPartiQLWithFilter",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PartiQLSelect",
+        "dynamodb:PartiQLInsert",
+        "dynamodb:PartiQLUpdate",
+        "dynamodb:PartiQLDelete"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME"
+    }
+  ]
+}

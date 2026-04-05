@@ -1,0 +1,50 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPublishMatchingTeamTag",
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish",
+        "sns:GetTopicAttributes"
+      ],
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Team": "${aws:PrincipalTag/Team}"
+        }
+      }
+    },
+    {
+      "Sid": "AllowListTopics",
+      "Effect": "Allow",
+      "Action": [
+        "sns:ListTopics",
+        "sns:ListSubscriptions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyUntaggedPrincipal",
+      "Effect": "Deny",
+      "Action": "sns:Publish",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Team": "true"
+        }
+      }
+    },
+    {
+      "Sid": "EnforceTagOnCreate",
+      "Effect": "Deny",
+      "Action": "sns:CreateTopic",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Team": "true"
+        }
+      }
+    }
+  ]
+}

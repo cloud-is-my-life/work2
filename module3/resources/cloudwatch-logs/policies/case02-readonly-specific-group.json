@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDescribeAll",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowReadSpecificGroup",
+      "Effect": "Allow",
+      "Action": [
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:GetLogRecord",
+        "logs:GetQueryResults",
+        "logs:StartQuery",
+        "logs:StopQuery"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:LOG_GROUP_NAME:*"
+    }
+  ]
+}

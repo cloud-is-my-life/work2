@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateAndUpdateFunction",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:UpdateFunctionCode",
+        "lambda:GetFunction",
+        "lambda:ListFunctions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowPassRoleScopedToLambdaExecRole",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/lambda-exec-*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPassRoleToHighPrivilegeRoles",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/Admin*",
+        "arn:aws:iam::ACCOUNT_ID:role/FullAccess*"
+      ]
+    }
+  ]
+}

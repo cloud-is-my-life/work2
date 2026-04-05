@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRoleAccess",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/AppRole"
+      },
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyNonVPCEndpointAccess",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:sourceVpce": "vpce-XXXXXXXXX"
+        }
+      }
+    }
+  ]
+}

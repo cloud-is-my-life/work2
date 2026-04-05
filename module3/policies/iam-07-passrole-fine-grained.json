@@ -1,0 +1,83 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "PassRole 세밀 제어. iam:PassedToService로 서비스 제한, Resource ARN 패턴으로 역할 범위 제한, iam:AssociatedResourceArn으로 연결 리소스 제한.",
+  "Statement": [
+    {
+      "Sid": "AllowPassRoleToEC2Only",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole",
+        "iam:GetRole"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/EC2_ROLE_PREFIX*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ec2.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "AllowPassRoleToLambdaOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole",
+        "iam:GetRole"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/LAMBDA_ROLE_PREFIX*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "AllowPassRoleToECSTasksOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole",
+        "iam:GetRole"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/ECS_TASK_ROLE_PREFIX*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": [
+            "ecs-tasks.amazonaws.com",
+            "ecs.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowPassRoleToEC2WithResourceConstraint",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/EC2_ROLE_PREFIX*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "ec2.amazonaws.com"
+        },
+        "ArnLike": {
+          "iam:AssociatedResourceARN": "arn:aws:ec2:*:ACCOUNT_ID:instance/*"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPassRoleToUnauthorizedServices",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "iam:PassedToService": [
+            "ec2.amazonaws.com",
+            "lambda.amazonaws.com",
+            "ecs-tasks.amazonaws.com",
+            "ecs.amazonaws.com",
+            "codebuild.amazonaws.com",
+            "codepipeline.amazonaws.com"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyAWSManagedKey",
+      "Effect": "Deny",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:UpdateSecret"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLikeIfExists": {
+          "secretsmanager:KmsKeyArn": "arn:aws:kms:*:*:alias/aws/secretsmanager"
+        }
+      }
+    },
+    {
+      "Sid": "DenyNoKmsKey",
+      "Effect": "Deny",
+      "Action": "secretsmanager:CreateSecret",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "secretsmanager:KmsKeyArn": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowCreateUpdateWithCMK",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:CreateSecret",
+        "secretsmanager:UpdateSecret"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

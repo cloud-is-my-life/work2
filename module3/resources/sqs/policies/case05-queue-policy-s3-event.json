@@ -1,0 +1,24 @@
+{
+  "_comment": "Queue Policy — S3 이벤트 알림 수신",
+  "Version": "2012-10-17",
+  "Id": "S3ToSQSPolicy",
+  "Statement": [
+    {
+      "Sid": "AllowS3EventNotification",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:s3:::BUCKET_NAME"
+        },
+        "StringEquals": {
+          "aws:SourceAccount": "ACCOUNT_ID"
+        }
+      }
+    }
+  ]
+}

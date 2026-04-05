@@ -1,0 +1,35 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDecryptWithContext",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "StringEquals": {
+          "kms:EncryptionContext:AppName": "MyApp",
+          "kms:EncryptionContext:Environment": "production"
+        }
+      }
+    },
+    {
+      "Sid": "RestrictContextKeys",
+      "Effect": "Deny",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "ForAnyValue:StringNotEquals": {
+          "kms:EncryptionContextKeys": ["AppName", "Environment"]
+        }
+      }
+    }
+  ]
+}

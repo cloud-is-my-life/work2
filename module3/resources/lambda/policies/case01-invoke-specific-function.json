@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowInvokeSpecificFunction",
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource": [
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME",
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME:*"
+      ]
+    },
+    {
+      "Sid": "AllowListFunctions",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions",
+        "lambda:GetFunction"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

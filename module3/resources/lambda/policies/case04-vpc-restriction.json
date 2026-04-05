@@ -1,0 +1,53 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateFunctionInSpecificVPC",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionConfiguration"
+      ],
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*",
+      "Condition": {
+        "StringEquals": {
+          "lambda:VpcIds": "VPC_ID"
+        },
+        "ForAllValues:StringEquals": {
+          "lambda:SubnetIds": [
+            "SUBNET_ID_1",
+            "SUBNET_ID_2"
+          ],
+          "lambda:SecurityGroupIds": [
+            "SG_ID_1"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyNonVPCFunction",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionConfiguration"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "lambda:VpcIds": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowPassRoleForLambda",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/LAMBDA_EXECUTION_ROLE",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

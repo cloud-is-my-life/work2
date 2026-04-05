@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowGrantOnlyForDecrypt",
+      "Effect": "Allow",
+      "Action": "kms:CreateGrant",
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "Bool": {
+          "kms:GrantIsForAWSResource": "true"
+        },
+        "ForAllValues:StringEquals": {
+          "kms:GrantOperations": ["Decrypt", "DescribeKey"]
+        }
+      }
+    },
+    {
+      "Sid": "RestrictGranteePrincipal",
+      "Effect": "Allow",
+      "Action": "kms:CreateGrant",
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "StringLike": {
+          "kms:GranteePrincipal": "arn:aws:iam::ACCOUNT_ID:role/Allowed*"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowQueryOnSpecificGSI",
+      "Effect": "Allow",
+      "Action": "dynamodb:Query",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME/index/INDEX_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:Attributes": [
+            "GSIPartitionKey",
+            "GSISortKey",
+            "ProjectedAttr1",
+            "ProjectedAttr2"
+          ]
+        },
+        "StringEquals": {
+          "dynamodb:Select": "SPECIFIC_ATTRIBUTES"
+        }
+      }
+    }
+  ]
+}

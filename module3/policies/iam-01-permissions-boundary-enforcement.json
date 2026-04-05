@@ -1,0 +1,100 @@
+{
+  "Version": "2012-10-17",
+  "Comment": "Permissions Boundary — 위임된 사용자/역할이 가질 수 있는 최대 권한 상한선. 이 정책 자체는 권한을 부여하지 않음.",
+  "Statement": [
+    {
+      "Sid": "AllowCoreServices",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*",
+        "ec2:*",
+        "lambda:*",
+        "cloudwatch:*",
+        "logs:*",
+        "dynamodb:*",
+        "sqs:*",
+        "sns:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowIAMReadAndSelfManage",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListUsers",
+        "iam:ListRoles",
+        "iam:ListPolicies",
+        "iam:GetUser",
+        "iam:GetRole",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:GetAccountPasswordPolicy",
+        "iam:ListVirtualMFADevices"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowSelfCredentialManagement",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ChangePassword",
+        "iam:GetUser",
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:ListAccessKeys",
+        "iam:UpdateAccessKey",
+        "iam:CreateVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:DeactivateMFADevice",
+        "iam:ListMFADevices",
+        "iam:ResyncMFADevice"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:user/${aws:username}",
+        "arn:aws:iam::*:mfa/*"
+      ]
+    },
+    {
+      "Sid": "DenyIAMAdminActions",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateUser",
+        "iam:DeleteUser",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutUserPolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteUserPolicy",
+        "iam:DeleteRolePolicy",
+        "iam:CreatePolicy",
+        "iam:DeletePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:PutUserPermissionsBoundary",
+        "iam:PutRolePermissionsBoundary",
+        "iam:DeleteUserPermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenySensitiveServices",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:*",
+        "account:*",
+        "billing:*",
+        "aws-portal:*",
+        "sts:AssumeRoot"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

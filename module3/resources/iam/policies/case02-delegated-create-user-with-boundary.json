@@ -1,0 +1,58 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateUserWithBoundaryOnly",
+      "Effect": "Allow",
+      "Action": "iam:CreateUser",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/dev-team/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/DeveloperBoundary"
+        }
+      }
+    },
+    {
+      "Sid": "AllowManageCreatedUsers",
+      "Effect": "Allow",
+      "Action": [
+        "iam:DeleteUser",
+        "iam:GetUser",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:DeleteUserPolicy",
+        "iam:ListAttachedUserPolicies",
+        "iam:ListUserPolicies",
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:ListAccessKeys",
+        "iam:CreateLoginProfile",
+        "iam:DeleteLoginProfile",
+        "iam:TagUser",
+        "iam:UntagUser"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/dev-team/*"
+    },
+    {
+      "Sid": "AllowListUsers",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListUsers",
+        "iam:ListPolicies",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyBoundaryRemoval",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteUserPermissionsBoundary",
+        "iam:PutUserPermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/dev-team/*"
+    }
+  ]
+}

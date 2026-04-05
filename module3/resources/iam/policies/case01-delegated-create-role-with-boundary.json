@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateRoleWithBoundaryOnly",
+      "Effect": "Allow",
+      "Action": "iam:CreateRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/app-roles/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/DeveloperBoundary"
+        }
+      }
+    },
+    {
+      "Sid": "AllowManageCreatedRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/app-roles/*"
+    },
+    {
+      "Sid": "AllowListRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListRoles",
+        "iam:ListPolicies",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyBoundaryRemoval",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:PutRolePermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/app-roles/*"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowViaS3Only",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "s3.AWS_REGION.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "DenyDirectKMSAccess",
+      "Effect": "Deny",
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID",
+      "Condition": {
+        "StringNotEquals": {
+          "kms:ViaService": "s3.AWS_REGION.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

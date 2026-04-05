@@ -1,0 +1,46 @@
+{
+  "_comment": "Resource Policy (aws logs put-resource-policy로 적용)",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCloudTrailLogs",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:LOG_GROUP_NAME:*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "ACCOUNT_ID"
+        }
+      }
+    },
+    {
+      "Sid": "AllowVPCFlowLogs",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+      },
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:LOG_GROUP_NAME:*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "ACCOUNT_ID"
+        },
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:vpc-flow-log/*"
+        }
+      }
+    }
+  ]
+}

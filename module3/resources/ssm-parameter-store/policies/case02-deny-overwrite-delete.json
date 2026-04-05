@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPutNewOnly",
+      "Effect": "Allow",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/app/prod/*"
+    },
+    {
+      "Sid": "DenyOverwrite",
+      "Effect": "Deny",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/app/prod/*",
+      "Condition": {
+        "StringEquals": {
+          "ssm:Overwrite": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyDelete",
+      "Effect": "Deny",
+      "Action": [
+        "ssm:DeleteParameter",
+        "ssm:DeleteParameters"
+      ],
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/app/prod/*"
+    }
+  ]
+}

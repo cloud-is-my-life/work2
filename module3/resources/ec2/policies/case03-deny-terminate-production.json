@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowTerminateNonProduction",
+      "Effect": "Allow",
+      "Action": "ec2:TerminateInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:ResourceTag/Environment": "production"
+        }
+      }
+    },
+    {
+      "Sid": "DenyTerminateProduction",
+      "Effect": "Deny",
+      "Action": "ec2:TerminateInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Environment": "production"
+        }
+      }
+    }
+  ]
+}

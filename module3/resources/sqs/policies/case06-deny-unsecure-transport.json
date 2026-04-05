@@ -1,0 +1,38 @@
+{
+  "_comment": "Queue Policy — TLS 강제 + Org 외부 차단",
+  "Version": "2012-10-17",
+  "Id": "SecureQueuePolicy",
+  "Statement": [
+    {
+      "Sid": "DenyUnsecureTransport",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyOutsideOrg",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "sqs:*",
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalOrgID": "o-XXXXXXXXXXXX"
+        }
+      }
+    }
+  ]
+}

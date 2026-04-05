@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadWrite",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:DescribeTable"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+        "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME/index/*"
+      ]
+    },
+    {
+      "Sid": "DenyScan",
+      "Effect": "Deny",
+      "Action": "dynamodb:Scan",
+      "Resource": [
+        "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+        "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME/index/*"
+      ]
+    },
+    {
+      "Sid": "DenyDeleteTable",
+      "Effect": "Deny",
+      "Action": [
+        "dynamodb:DeleteTable",
+        "dynamodb:DeleteTableReplica"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/*"
+    }
+  ]
+}

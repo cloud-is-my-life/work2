@@ -1,0 +1,91 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowManageUsersUnderPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateUser",
+        "iam:DeleteUser",
+        "iam:GetUser",
+        "iam:AttachUserPolicy",
+        "iam:DetachUserPolicy",
+        "iam:PutUserPolicy",
+        "iam:DeleteUserPolicy",
+        "iam:ListAttachedUserPolicies",
+        "iam:ListUserPolicies",
+        "iam:CreateAccessKey",
+        "iam:DeleteAccessKey",
+        "iam:ListAccessKeys",
+        "iam:CreateLoginProfile",
+        "iam:DeleteLoginProfile",
+        "iam:UpdateLoginProfile",
+        "iam:TagUser",
+        "iam:UntagUser",
+        "iam:PutUserPermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:user/dev-team/*"
+    },
+    {
+      "Sid": "AllowManageRolesUnderPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:PutRolePermissionsBoundary"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/dev-team/*"
+    },
+    {
+      "Sid": "AllowManagePoliciesUnderPath",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:CreatePolicyVersion",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicyVersions"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:policy/dev-team/*"
+    },
+    {
+      "Sid": "AllowListAll",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListUsers",
+        "iam:ListRoles",
+        "iam:ListPolicies"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyManageOutsidePath",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateUser",
+        "iam:DeleteUser",
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:AttachUserPolicy",
+        "iam:AttachRolePolicy"
+      ],
+      "NotResource": [
+        "arn:aws:iam::ACCOUNT_ID:user/dev-team/*",
+        "arn:aws:iam::ACCOUNT_ID:role/dev-team/*"
+      ]
+    }
+  ]
+}

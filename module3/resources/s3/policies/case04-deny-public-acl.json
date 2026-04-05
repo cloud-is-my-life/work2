@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyPublicACL",
+      "Effect": "Deny",
+      "Action": [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": [
+            "public-read",
+            "public-read-write",
+            "authenticated-read"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicBucketACL",
+      "Effect": "Deny",
+      "Action": "s3:PutBucketAcl",
+      "Resource": "arn:aws:s3:::DATA_BUCKET",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": [
+            "public-read",
+            "public-read-write",
+            "authenticated-read"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyGrantPublicRead",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringLike": {
+          "s3:x-amz-grant-read": ["*http://acs.amazonaws.com/groups/global/AllUsers*"]
+        }
+      }
+    }
+  ]
+}

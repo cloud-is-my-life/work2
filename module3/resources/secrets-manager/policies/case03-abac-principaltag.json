@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAccessMatchingProjectTag",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Project": "${aws:PrincipalTag/Project}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyIfProjectTagMissing",
+      "Effect": "Deny",
+      "Action": "secretsmanager:*",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Project": "true"
+        }
+      }
+    }
+  ]
+}

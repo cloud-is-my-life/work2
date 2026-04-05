@@ -1,0 +1,37 @@
+{
+    "Version": "2012-10-17",
+    "Id": "combo-basic-policy",
+    "Statement": [
+        {
+            "Sid": "DenyNonTLS",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "*",
+            "Condition": {
+                "Bool": {
+                    "aws:SecureTransport": "false"
+                }
+            }
+        },
+        {
+            "Sid": "AllowReadOnlyViaMountTarget",
+            "Effect": "Allow",
+            "Principal": { "AWS": "*" },
+            "Action": [
+                "elasticfilesystem:ClientMount"
+            ],
+            "Condition": {
+                "Bool": {
+                    "elasticfilesystem:AccessedViaMountTarget": "true"
+                }
+            }
+        },
+        {
+            "Sid": "DenyRootAccess",
+            "Effect": "Deny",
+            "Principal": { "AWS": "*" },
+            "Action": "elasticfilesystem:ClientRootAccess",
+            "Condition": {}
+        }
+    ]
+}

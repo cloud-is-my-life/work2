@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullLambdaManagement",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunction",
+        "lambda:ListFunctions",
+        "lambda:InvokeFunction",
+        "lambda:PublishVersion",
+        "lambda:CreateAlias",
+        "lambda:UpdateAlias",
+        "lambda:TagResource",
+        "lambda:UntagResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDeleteFunction",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:DeleteFunction",
+        "lambda:DeleteAlias"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

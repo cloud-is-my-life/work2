@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPutParameter",
+      "Effect": "Allow",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/app/prod/*"
+    },
+    {
+      "Sid": "AllowApprovedCMK",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/APPROVED_KEY_ID"
+    },
+    {
+      "Sid": "DenyDefaultSSMKey",
+      "Effect": "Deny",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/DEFAULT_SSM_KEY_ID"
+    }
+  ]
+}

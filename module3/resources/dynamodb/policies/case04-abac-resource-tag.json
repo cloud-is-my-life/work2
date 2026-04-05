@@ -1,0 +1,49 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAccessByTeamTag",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:ACCOUNT_ID:table/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Team": "${aws:PrincipalTag/Team}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyIfTeamTagMissing",
+      "Effect": "Deny",
+      "Action": "dynamodb:*",
+      "Resource": "arn:aws:dynamodb:*:ACCOUNT_ID:table/*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Team": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyDeleteOnProduction",
+      "Effect": "Deny",
+      "Action": [
+        "dynamodb:DeleteTable",
+        "dynamodb:DeleteItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:ACCOUNT_ID:table/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Environment": "production"
+        }
+      }
+    }
+  ]
+}

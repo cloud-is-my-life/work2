@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowUploadWithSSEKMS",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-server-side-encryption": "aws:kms",
+          "s3:x-amz-server-side-encryption-aws-kms-key-id": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KMS_KEY_ID"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUploadWithoutSSEKMS",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption": "aws:kms"
+        }
+      }
+    },
+    {
+      "Sid": "DenyUploadWithoutEncryption",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "Null": {
+          "s3:x-amz-server-side-encryption": "true"
+        }
+      }
+    }
+  ]
+}

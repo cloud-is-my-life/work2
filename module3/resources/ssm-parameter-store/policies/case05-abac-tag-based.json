@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDescribeAll",
+      "Effect": "Allow",
+      "Action": "ssm:DescribeParameters",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowReadByTag",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Team": "${aws:PrincipalTag/Team}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyIfTeamTagMissing",
+      "Effect": "Deny",
+      "Action": "ssm:*",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/*",
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Team": "true"
+        }
+      }
+    }
+  ]
+}

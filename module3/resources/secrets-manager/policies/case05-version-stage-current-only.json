@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowOnlyCurrentVersion",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:AWS_REGION:ACCOUNT_ID:secret:prod/*",
+      "Condition": {
+        "StringEquals": {
+          "secretsmanager:VersionStage": "AWSCURRENT"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPreviousVersion",
+      "Effect": "Deny",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "secretsmanager:VersionStage": "AWSPREVIOUS"
+        }
+      }
+    }
+  ]
+}

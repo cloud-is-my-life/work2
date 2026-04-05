@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAllSSM",
+      "Effect": "Allow",
+      "Action": "ssm:*",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/*"
+    },
+    {
+      "Sid": "DenyRecursiveOnSecrets",
+      "Effect": "Deny",
+      "Action": "ssm:GetParametersByPath",
+      "Resource": "arn:aws:ssm:AWS_REGION:ACCOUNT_ID:parameter/app/prod/secrets/*",
+      "Condition": {
+        "StringEquals": {
+          "ssm:Recursive": "true"
+        }
+      }
+    }
+  ]
+}

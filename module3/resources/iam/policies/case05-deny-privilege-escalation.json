@@ -1,0 +1,61 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyRemoveBoundaryFromAnyEntity",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteUserPermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyChangeBoundaryToWeaker",
+      "Effect": "Deny",
+      "Action": [
+        "iam:PutUserPermissionsBoundary",
+        "iam:PutRolePermissionsBoundary"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/DeveloperBoundary"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreatePolicyWithFullAccess",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicy",
+        "iam:CreatePolicyVersion"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyCreateRoleWithoutBoundary",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateUser",
+        "iam:CreateRole"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "iam:PermissionsBoundary": "arn:aws:iam::ACCOUNT_ID:policy/DeveloperBoundary"
+        }
+      }
+    },
+    {
+      "Sid": "DenyEscalationViaPassRole",
+      "Effect": "Deny",
+      "Action": "iam:PassRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/Admin*",
+        "arn:aws:iam::ACCOUNT_ID:role/FullAccess*",
+        "arn:aws:iam::ACCOUNT_ID:role/OrganizationAccountAccessRole"
+      ]
+    }
+  ]
+}

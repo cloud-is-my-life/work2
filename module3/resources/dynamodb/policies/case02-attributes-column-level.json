@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowOwnRowsSpecificColumns",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"],
+          "dynamodb:Attributes": [
+            "UserId",
+            "GameTitle",
+            "TopScore",
+            "Wins",
+            "Losses"
+          ]
+        },
+        "StringEqualsIfExists": {
+          "dynamodb:Select": "SPECIFIC_ATTRIBUTES",
+          "dynamodb:ReturnValues": ["NONE", "UPDATED_OLD", "UPDATED_NEW"]
+        }
+      }
+    }
+  ]
+}

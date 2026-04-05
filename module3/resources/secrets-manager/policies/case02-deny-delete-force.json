@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyDeleteSecret",
+      "Effect": "Deny",
+      "Action": "secretsmanager:DeleteSecret",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyForceDelete",
+      "Effect": "Deny",
+      "Action": "secretsmanager:DeleteSecret",
+      "Resource": "*",
+      "Condition": {
+        "BoolIfExists": {
+          "secretsmanager:ForceDeleteWithoutRecovery": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyShortRecoveryWindow",
+      "Effect": "Deny",
+      "Action": "secretsmanager:DeleteSecret",
+      "Resource": "*",
+      "Condition": {
+        "NumericLessThan": {
+          "secretsmanager:RecoveryWindowInDays": "7"
+        }
+      }
+    }
+  ]
+}

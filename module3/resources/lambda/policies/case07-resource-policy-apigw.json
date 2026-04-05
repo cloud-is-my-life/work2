@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAPIGatewayInvoke",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "apigateway.amazonaws.com"
+      },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:execute-api:AWS_REGION:ACCOUNT_ID:API_ID/*/METHOD/RESOURCE_PATH"
+        }
+      }
+    }
+  ]
+}
