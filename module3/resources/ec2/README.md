@@ -63,6 +63,120 @@ arn:aws:ec2:REGION:ACCOUNT_ID:launch-template/*
 
 ---
 
+## 케이스별 상세 설명
+
+### Case 01 — 태그 기반 Start/Stop/Reboot 제한
+
+**시나리오**: `Team` 태그가 자기 팀과 일치하는 인스턴스만 Start/Stop/Reboot 허용. 다른 팀 인스턴스는 조작 불가.
+
+**핵심 메커니즘**:
+- `ec2:ResourceTag/Team` + `StringEquals` + `${aws:PrincipalTag/Team}` 동적 매칭
+- Action: `ec2:StartInstances`, `ec2:StopInstances`, `ec2:RebootInstances`
+
+**허용**: 자기 팀 태그 인스턴스 Start/Stop/Reboot
+**거부**: 다른 팀 인스턴스 조작 시 `AccessDenied`
+
+**주의사항**:
+- `ec2:ResourceTag`는 **이미 존재하는** 인스턴스에만 동작 — 생성 시점에는 `aws:RequestTag` 사용
+- `DescribeInstances`는 태그 기반 필터링 불가 → `Resource: "*"` 별도 허용 필요
+- 태그 미설정 인스턴스는 조건 불일치로 자동 거부됨
+
+---
+
+### Case 02 — RunInstances 인스턴스 타입 + 서브넷 제한
+
+**시나리오**: 허용된 인스턴스 타입(`t3.micro`, `t3.small`)과 특정 서브넷에서만 인스턴스 생성 가능.
+
+**핵심 메커니즘**:
+- `ec2:InstanceType` + `StringEquals` → 허용 타입 목록
+- `ec2:Subnet` → 허용 서브넷 ARN
+- Resource에 instance, volume, network-interface, security-group, subnet, image 6개 리소스 타입 모두 지정
+
+**허용**: `t3.micro`/`t3.small` + 지정 서브넷에서 `RunInstances`
+**거부**: `m5.4xlarge` 등 비허용 타입 또는 다른 서브넷에서 생성 시 `AccessDenied`
+
+**주의사항**:
+- `RunInstances`는 **다중 리소스 타입** 필요 — instance ARN만 넣으면 volume/network-interface 생성 단계에서 실패
+- `ec2:InstanceType` 조건은 `RunInstances`에만 적용 — `ModifyInstanceAttribute`로 타입 변경은 별도 제어 필요
+- 서브넷 조건은 `ec2:Subnet` (서브넷 ARN) 또는 `ec2:Vpc` (VPC ARN)로 지정
+
+---
+
+### Case 03 — Production 태그 인스턴스 Terminate 차단
+
+**시나리오**: `Environment=Production` 태그가 붙은 인스턴스는 누구도 Terminate 불가. Explicit Deny로 구현.
+
+**핵심 메커니즘**:
+- Deny: `ec2:TerminateInstances` + `ec2:ResourceTag/Environment: "Production"`
+- Allow: 그 외 인스턴스에 대한 일반 관리 작업
+
+**허용**: `Environment=Development` 등 비프로덕션 인스턴스 Terminate
+**거부**: `Environment=Production` 인스턴스 Terminate → `AccessDenied` (관리자 포함)
+
+**주의사항**:
+- Explicit Deny는 어떤 Allow보다 우선 — 관리자 정책에 `ec2:*` Allow가 있어도 Deny가 이김
+- 태그 제거 후 Terminate 우회 방지 → `ec2:DeleteTags` + `aws:TagKeys` 조건으로 `Environment` 태그 삭제도 차단 권장
+- `StopInstances`는 별도 — Terminate만 차단하면 Stop은 가능
+
+---
+
+### Case 04 — EBS 암호화 강제
+
+**시나리오**: `RunInstances` 시 EBS 볼륨이 암호화되지 않으면 인스턴스 생성 거부.
+
+**핵심 메커니즘**:
+- Deny: `ec2:RunInstances` + Resource `arn:aws:ec2:*:*:volume/*` + `ec2:Encrypted: "false"`
+- 또는 Allow에 `ec2:Encrypted: "true"` 조건 추가
+
+**허용**: 암호화된 EBS 볼륨으로 인스턴스 생성
+**거부**: 비암호화 EBS 볼륨 포함 시 `AccessDenied`
+
+**주의사항**:
+- `ec2:Encrypted` 조건은 **volume 리소스 타입에만** 적용 — instance 리소스에 넣으면 무시됨
+- Deny 패턴에서 Resource를 `arn:aws:ec2:*:*:volume/*`로 한정해야 다른 리소스 타입에 영향 없음
+- 계정 수준 EBS 기본 암호화 설정(`aws ec2 enable-ebs-encryption-by-default`)과 병행 권장
+- 특정 KMS 키 강제는 `ec2:VolumeKmsKeyId` 조건 추가
+
+---
+
+### Case 05 — 생성 시 필수 태그 강제
+
+**시나리오**: `RunInstances` 시 `Environment`와 `Team` 태그가 반드시 포함되어야 함. 태그 없으면 생성 거부.
+
+**핵심 메커니즘**:
+- Deny: `ec2:RunInstances` + `aws:RequestTag/Environment` `Null: "true"` → 태그 누락 시 거부
+- Deny: `aws:RequestTag/Team` `Null: "true"` → 태그 누락 시 거부
+- Allow: `ec2:CreateTags` + `ec2:CreateAction: "RunInstances"` → RunInstances 시점에만 태그 생성 허용
+
+**허용**: `Environment` + `Team` 태그 포함한 `RunInstances`
+**거부**: 태그 누락 시 `AccessDenied`
+
+**주의사항**:
+- `CreateTags`는 `RunInstances`와 **별도 Statement** 필요 — 같은 Statement에 넣으면 안 됨
+- `ec2:CreateAction` 조건으로 `CreateTags`를 `RunInstances` 시점에만 허용 → 기존 인스턴스에 임의 태그 추가 방지
+- `aws:TagKeys` + `ForAllValues:StringEquals`로 허용 태그 키 목록도 제한 가능
+- 태그 값 패턴 제한은 `aws:RequestTag/Environment` + `StringEquals: ["Production", "Development", "Staging"]`
+
+---
+
+### Case 06 — Launch Template 없이 RunInstances 차단
+
+**시나리오**: 사전 승인된 Launch Template을 사용해야만 인스턴스 생성 가능. 직접 파라미터 지정 차단.
+
+**핵심 메커니즘**:
+- Deny: `ec2:RunInstances` + `ec2:IsLaunchTemplateResource: "false"` → Launch Template 미사용 시 거부
+- 또는 Allow에 `ec2:IsLaunchTemplateResource: "true"` 조건 추가
+
+**허용**: Launch Template 기반 `RunInstances`
+**거부**: `--image-id`, `--instance-type` 등 직접 파라미터로 생성 시 `AccessDenied`
+
+**주의사항**:
+- `ec2:IsLaunchTemplateResource`는 Bool 타입 — `"true"`/`"false"` 문자열로 비교
+- Launch Template 자체의 수정 권한(`ec2:CreateLaunchTemplateVersion`)도 별도 제어 필요 — 아니면 사용자가 템플릿 수정으로 우회 가능
+- 특정 Launch Template만 허용하려면 Resource에 `arn:aws:ec2:REGION:ACCOUNT:launch-template/lt-XXXX` 지정
+
+---
+
 ## CloudShell 준비
 
 ```bash

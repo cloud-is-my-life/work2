@@ -89,13 +89,128 @@ arn:aws:sns:*:123456789012:my-topic
 
 | 파일 | 시나리오 |
 |---|---|
-| [p01-topic-publish-subscribe-split.json](./policies/p01-topic-publish-subscribe-split.json) | Publisher/Subscriber 역할 분리 |
-| [p02-subscribe-https-only.json](./policies/p02-subscribe-https-only.json) | HTTPS 프로토콜 구독만 허용 |
-| [p03-enforce-encryption-kms.json](./policies/p03-enforce-encryption-kms.json) | KMS 암호화 토픽 Publish + TLS 강제 |
-| [p04-cross-account-publish.json](./policies/p04-cross-account-publish.json) | 크로스 계정 Publish (confused deputy 방지) |
-| [p05-abac-tag-based.json](./policies/p05-abac-tag-based.json) | 태그 기반 ABAC (ResourceTag/environment) |
-| [p06-source-ip-restriction.json](./policies/p06-source-ip-restriction.json) | 소스 IP/CIDR 제한 |
-| [p07-vpc-endpoint-only.json](./policies/p07-vpc-endpoint-only.json) | VPC 엔드포인트 전용 Publish |
+| [case01-publish-only.json](./policies/case01-publish-only.json) | 특정 토픽에 Publish만 허용 |
+| [case02-subscribe-https-only.json](./policies/case02-subscribe-https-only.json) | HTTPS 프로토콜 구독만 허용 |
+| [case03-deny-delete-topic.json](./policies/case03-deny-delete-topic.json) | 토픽 삭제·속성 변경 차단 |
+| [case04-topic-policy-sqs.json](./policies/case04-topic-policy-sqs.json) | Topic Policy — SQS 구독 + 크로스 계정 Publish |
+| [case05-topic-policy-s3-event.json](./policies/case05-topic-policy-s3-event.json) | Topic Policy — S3 이벤트 알림 수신 |
+| [case06-abac-tag-based.json](./policies/case06-abac-tag-based.json) | 태그 기반 ABAC |
+
+---
+
+## 5-1. 케이스별 상세 설명
+
+### Case 01 — 특정 토픽에 Publish만 허용
+
+**시나리오**: 애플리케이션이 특정 토픽에 메시지를 발행만 가능. 구독, 토픽 관리 불가.
+
+**핵심 메커니즘**:
+- Allow: `sns:Publish` → 특정 토픽 ARN
+- Allow: `sns:ListTopics`, `sns:GetTopicAttributes` → Resource `*` (리소스 수준 제어 불가)
+
+**허용**: 지정 토픽에 `Publish`
+**거부**: `Subscribe`, `DeleteTopic`, 다른 토픽에 Publish
+
+**주의사항**:
+- `sns:ListTopics`는 `Resource: "*"` 필수 — 토픽 ARN 지정하면 동작 안 함
+- `Publish`는 토픽 ARN 또는 전화번호/엔드포인트 ARN 대상 가능 — 토픽 ARN만 허용하려면 Resource 범위 한정
+- FIFO 토픽에 Publish 시 `MessageGroupId` 필수 — IAM과 무관하지만 실패 원인으로 혼동 가능
+
+---
+
+### Case 02 — HTTPS 프로토콜 구독만 허용
+
+**시나리오**: `Subscribe` 허용하되 HTTPS 프로토콜만 가능. email, HTTP, SMS 등 비보안 프로토콜 차단.
+
+**핵심 메커니즘**:
+- Allow: `sns:Subscribe` + `sns:Protocol: "https"` → 특정 토픽 ARN
+- Deny: `sns:Subscribe` + `sns:Protocol` ≠ `"https"` → 비HTTPS 프로토콜 차단
+- Allow: `sns:Unsubscribe` → 구독 해제 허용
+
+**허용**: HTTPS 엔드포인트 구독
+**거부**: email, HTTP, SMS, SQS, Lambda 프로토콜 구독 → `AccessDenied`
+
+**주의사항**:
+- `sns:Protocol` 조건은 `Subscribe` Action에만 적용 — `Publish`에는 무의미
+- SQS, Lambda 프로토콜도 차단됨 → 서비스 연동이 필요하면 해당 프로토콜도 허용 목록에 추가
+- `Unsubscribe`는 인증 없이도 동작 가능 — `AuthenticateOnUnsubscribe=true` 설정 권장
+- Deny Statement에서 `StringNotEquals`로 HTTPS 외 전부 차단하는 것이 Allow 조건보다 확실
+
+---
+
+### Case 03 — 토픽 삭제·속성 변경 차단
+
+**시나리오**: 토픽 사용(Publish/Subscribe)은 허용하되, 토픽 삭제와 속성 변경은 Explicit Deny로 차단.
+
+**핵심 메커니즘**:
+- Deny: `sns:DeleteTopic`, `sns:RemovePermission` → Resource `*`
+- Allow: 일반 사용 Action (Publish, Subscribe, GetTopicAttributes 등)
+
+**허용**: 메시지 발행, 구독, 토픽 조회
+**거부**: 토픽 삭제, 권한 제거 → `AccessDenied`
+
+**주의사항**:
+- `sns:SetTopicAttributes`도 Deny 고려 — 토픽 정책, 전송 정책, 암호화 설정 변경 방지
+- `sns:RemovePermission`은 토픽 정책에서 Statement 제거 — 크로스 계정 접근 차단에 악용 가능
+- Explicit Deny는 관리자 Allow보다 우선 — 의도적으로 강력한 보호
+
+---
+
+### Case 04 — Topic Policy: SQS 구독 + 크로스 계정 Publish
+
+**시나리오**: SQS 큐가 토픽을 구독할 수 있도록 허용 + 외부 계정이 Organization 내부에서만 Publish 가능하도록 Topic Policy 설정.
+
+**핵심 메커니즘**:
+- Statement 1: `Principal: {"Service": "sqs.amazonaws.com"}` + `sns:Subscribe` + `aws:SourceArn` 조건
+- Statement 2: `Principal: {"AWS": "EXTERNAL_ACCOUNT"}` + `sns:Publish` + `aws:PrincipalOrgID` 조건
+
+**허용**: 지정 SQS 큐의 구독, Organization 내부 계정의 Publish
+**거부**: 비허용 SQS 큐, Organization 외부 계정
+
+**주의사항**:
+- Topic Policy는 Resource-based 정책 — `Principal` 필수
+- 같은 계정 내 SNS → SQS 연동은 Topic Policy 또는 Queue Policy 중 하나만 있으면 됨
+- 크로스 계정은 Topic Policy + 상대 계정 IAM Policy 양쪽 모두 필요 (교집합)
+- `aws:SourceArn` 조건으로 특정 SQS 큐만 구독 허용 — 없으면 모든 SQS 큐가 구독 가능
+
+---
+
+### Case 05 — Topic Policy: S3 이벤트 알림 수신
+
+**시나리오**: S3 버킷의 이벤트 알림(ObjectCreated 등)이 SNS 토픽으로 전송되도록 Topic Policy 설정.
+
+**핵심 메커니즘**:
+- Topic Policy: `Principal: {"Service": "s3.amazonaws.com"}`
+- Allow: `sns:Publish`
+- Condition: `aws:SourceArn` → 특정 S3 버킷 ARN, `aws:SourceAccount` → 버킷 소유 계정
+
+**허용**: 지정 S3 버킷의 이벤트 알림 수신
+**거부**: 다른 버킷, 다른 서비스에서의 Publish
+
+**주의사항**:
+- `aws:SourceAccount` 조건 추가 권장 — confused deputy 방지
+- S3 버킷 알림 설정은 버킷 소유자가 수행 — Topic Policy가 먼저 설정되어 있어야 함
+- 암호화 토픽(SSE-KMS) 사용 시 KMS Key Policy에 `s3.amazonaws.com`의 `kms:GenerateDataKey*`, `kms:Decrypt` 허용 필요
+- `AddPermission` API는 Condition 블록 미지원 → `SetTopicAttributes`로 직접 정책 JSON 작성
+
+---
+
+### Case 06 — 태그 기반 ABAC
+
+**시나리오**: 토픽의 `Team` 태그와 IAM 사용자의 `PrincipalTag/Team`이 일치할 때만 Publish 허용.
+
+**핵심 메커니즘**:
+- `aws:ResourceTag/Team` + `StringEquals` + `${aws:PrincipalTag/Team}` 동적 매칭
+- Deny: `aws:PrincipalTag/Team` `Null: "true"` → 태그 없는 사용자 전면 차단
+- Deny: `sns:CreateTopic` + `aws:RequestTag/Team` `Null: "true"` → 생성 시 태그 강제
+
+**허용**: `PrincipalTag/Team = orders` → `ResourceTag/Team = orders` 토픽만
+**거부**: 태그 불일치, 태그 미설정, 태그 없이 토픽 생성
+
+**주의사항**:
+- `sns:ListTopics`는 태그 조건 적용 불가 → `Resource: "*"` 별도 Statement 필요
+- `sns:TagResource`/`sns:UntagResource` 권한도 제어해야 태그 변경으로 우회 방지
+- 토픽 생성 시 태그 강제와 기존 토픽 접근 제어는 별도 Statement로 구현
 
 ---
 

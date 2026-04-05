@@ -89,13 +89,149 @@ arn:aws:lambda:REGION:ACCOUNT_ID:code-signing-config:CSC_ID
 
 | 케이스 | 파일 | 의도 |
 |---|---|---|
-| Case 01 | `policies/case01-function-invoke-specific.json` | 특정 함수/별칭만 Invoke 허용 (Qualifier 처리 포함) |
-| Case 02 | `policies/case02-layer-access-control.json` | 허용 레이어 목록 강제 (lambda:Layer) |
-| Case 03 | `policies/case03-vpc-enforcement.json` | VPC/서브넷/보안그룹 배포 강제 (SCP 패턴) |
-| Case 04 | `policies/case04-tag-based-abac.json` | 태그 기반 ABAC (PrincipalTag → ResourceTag 매칭) |
-| Case 05 | `policies/case05-function-url-auth.json` | Function URL 인증 타입 강제 + InvokedViaFunctionUrl |
-| Case 06 | `policies/case06-alias-version-restriction.json` | 별칭/버전 기반 호출 제한 (프로덕션 보호) |
-| Case 07 | `policies/case07-resource-based-cross-account.json` | 리소스 기반 정책 패턴 (크로스 계정, 서비스 Principal) |
+| Case 01 | `policies/case01-invoke-specific-function.json` | 특정 함수만 Invoke 허용 (별칭 포함) |
+| Case 02 | `policies/case02-deploy-only.json` | 코드 배포만 허용 (설정 변경·삭제 차단) |
+| Case 03 | `policies/case03-deny-delete-function.json` | 함수 삭제 차단 |
+| Case 04 | `policies/case04-vpc-restriction.json` | 특정 VPC/서브넷에서만 함수 생성 허용 |
+| Case 05 | `policies/case05-passrole-scoped.json` | PassRole을 특정 실행 역할로만 제한 |
+| Case 06 | `policies/case06-abac-tag-based.json` | 태그 기반 ABAC |
+| Case 07 | `policies/case07-resource-policy-apigw.json` | Resource-based Policy — API Gateway 호출 허용 |
+
+---
+
+## 케이스별 상세 설명
+
+### Case 01 — 특정 함수만 Invoke 허용 (별칭 포함)
+
+**시나리오**: 특정 Lambda 함수만 호출 가능. 별칭(`PROD`)이나 버전 번호로 호출하는 경우도 허용.
+
+**핵심 메커니즘**:
+- Allow: `lambda:InvokeFunction` → Resource에 unqualified ARN + qualified ARN(`:*`) 둘 다 지정
+- `arn:aws:lambda:REGION:ACCOUNT:function:FUNCTION_NAME` — `$LATEST` 호출
+- `arn:aws:lambda:REGION:ACCOUNT:function:FUNCTION_NAME:*` — 별칭/버전 호출
+
+**허용**: `invoke --function-name FUNCTION_NAME`, `invoke --function-name FUNCTION_NAME:PROD`
+**거부**: 다른 함수 호출, `ListFunctions` 외 관리 작업
+
+**주의사항**:
+- Unqualified ARN(`function:my-fn`)과 Qualified ARN(`function:my-fn:PROD`)은 **별개 리소스** — 하나만 넣으면 다른 쪽 호출이 `AccessDenied`
+- 둘 다 허용하려면 Resource 배열에 두 패턴 모두 명시하거나 `function:my-fn*` 패턴 사용
+- `lambda:ListFunctions`는 `Resource: "*"` 필수
+
+---
+
+### Case 02 — 코드 배포만 허용 (설정 변경·삭제 차단)
+
+**시나리오**: 개발자가 함수 코드를 업데이트하고 버전/별칭을 관리할 수 있지만, 함수 설정(메모리, 타임아웃, VPC 등) 변경과 삭제는 불가.
+
+**핵심 메커니즘**:
+- Allow: `lambda:UpdateFunctionCode`, `lambda:PublishVersion`, `lambda:CreateAlias`, `lambda:UpdateAlias`, `lambda:GetFunction`, `lambda:ListVersionsByFunction`, `lambda:ListAliases`
+- Deny: `lambda:UpdateFunctionConfiguration`, `lambda:DeleteFunction`, `lambda:CreateFunction`
+
+**허용**: 코드 업데이트, 버전 발행, 별칭 생성/변경
+**거부**: 함수 설정 변경, 함수 삭제, 새 함수 생성
+
+**주의사항**:
+- `UpdateFunctionCode`와 `UpdateFunctionConfiguration`은 별도 Action — 코드만 허용하고 설정은 차단 가능
+- `PublishVersion`은 코드 배포 후 버전 고정에 필수 — 빠뜨리면 별칭이 `$LATEST`만 가리킴
+- `PutFunctionConcurrency`/`DeleteFunctionConcurrency`도 Deny 고려 — 동시성 설정 변경 방지
+
+---
+
+### Case 03 — 함수 삭제 차단
+
+**시나리오**: Lambda 함수 전체 관리는 허용하되, 함수 삭제와 별칭 삭제만 Explicit Deny로 차단.
+
+**핵심 메커니즘**:
+- Deny: `lambda:DeleteFunction`, `lambda:DeleteAlias` → Resource `*`
+- Allow: 그 외 Lambda 관리 Action 전체
+
+**허용**: 함수 생성, 코드/설정 변경, 호출, 버전/별칭 관리
+**거부**: 함수 삭제, 별칭 삭제 → `AccessDenied`
+
+**주의사항**:
+- `DeleteFunction`은 특정 버전 삭제에도 사용됨 — 버전 삭제도 차단됨
+- `DeleteAlias`를 Deny하지 않으면 별칭 삭제 후 재생성으로 다른 버전 가리키기 가능
+- `DeleteLayerVersion`은 별도 Action — Layer 삭제도 차단하려면 추가 Deny 필요
+
+---
+
+### Case 04 — 특정 VPC/서브넷에서만 함수 생성 허용
+
+**시나리오**: Lambda 함수가 반드시 지정 VPC/서브넷/보안그룹에 연결되어야 함. VPC 없는 함수 생성 차단.
+
+**핵심 메커니즘**:
+- Allow: `lambda:CreateFunction`, `lambda:UpdateFunctionConfiguration` + `lambda:VpcIds: "VPC_ID"` 조건
+- `ForAllValues:StringEquals` → `lambda:SubnetIds`, `lambda:SecurityGroupIds` 허용 목록
+- Deny: `lambda:VpcIds` `Null: "true"` → VPC 미지정 함수 생성 차단
+
+**허용**: 지정 VPC/서브넷/보안그룹에 연결된 함수 생성
+**거부**: VPC 없는 함수, 다른 VPC/서브넷 사용 → `AccessDenied`
+
+**주의사항**:
+- `lambda:VpcIds`는 **단일 String** → `StringEquals` 사용
+- `lambda:SubnetIds`/`lambda:SecurityGroupIds`는 **ArrayOfString** → `ForAllValues:StringEquals` 사용 (연산자 선택 다름)
+- `Null` 조건으로 VPC 미지정 케이스 차단 필수 — 없으면 VPC 없는 함수 생성 가능
+- VPC Lambda는 `ec2:CreateNetworkInterface`, `ec2:DescribeNetworkInterfaces`, `ec2:DeleteNetworkInterface` 권한도 실행 역할에 필요
+
+---
+
+### Case 05 — PassRole을 특정 실행 역할로만 제한
+
+**시나리오**: Lambda 함수 생성/업데이트 시 `iam:PassRole`을 특정 실행 역할(`lambda-exec-*`)로만 제한. 고권한 역할 전달 차단.
+
+**핵심 메커니즘**:
+- Allow: `iam:PassRole` → Resource `arn:aws:iam::ACCOUNT:role/lambda-exec-*` + `iam:PassedToService: "lambda.amazonaws.com"`
+- Deny: `iam:PassRole` → Resource `arn:aws:iam::ACCOUNT:role/Admin*`, `role/FullAccess*`
+
+**허용**: `lambda-exec-` prefix 역할을 Lambda에 전달
+**거부**: Admin, FullAccess 등 고권한 역할 전달 → `AccessDenied`
+
+**주의사항**:
+- `iam:PassRole`의 Resource는 **전달 대상 Role ARN**이지 Lambda 함수 ARN이 아님 — 혼동 주의
+- `iam:PassedToService` 조건으로 Lambda 서비스에만 전달 허용 — 다른 서비스(EC2, ECS 등)에 전달 차단
+- `CreateFunction` + `PassRole`이 있으면 해당 Role의 권한을 간접 획득 가능 → PassRole 범위 최소화 필수
+- Deny Statement로 고권한 역할을 명시적 차단하는 것이 Allow 범위 제한보다 확실
+
+---
+
+### Case 06 — 태그 기반 ABAC
+
+**시나리오**: 함수의 `Team` 태그와 IAM 사용자의 `PrincipalTag/Team`이 일치할 때만 Invoke/관리 허용.
+
+**핵심 메커니즘**:
+- `aws:ResourceTag/Team` + `StringEquals` + `${aws:PrincipalTag/Team}` 동적 매칭
+- Deny: `aws:PrincipalTag/Team` `Null: "true"` → 태그 없는 사용자 전면 차단
+- Deny: `lambda:CreateFunction` + `aws:RequestTag/Team` `Null: "true"` → 생성 시 태그 강제
+
+**허용**: `PrincipalTag/Team = backend` → `ResourceTag/Team = backend` 함수만
+**거부**: 태그 불일치, 태그 미설정, 태그 없이 함수 생성
+
+**주의사항**:
+- `lambda:ListFunctions`는 태그 조건 적용 불가 → `Resource: "*"` 별도 Statement 필요
+- `lambda:TagResource`/`lambda:UntagResource` 권한도 제어해야 태그 변경으로 우회 방지
+- Layer에는 태그 기반 ABAC 미지원 — 함수 수준에서만 동작
+
+---
+
+### Case 07 — Resource-based Policy: API Gateway 호출 허용
+
+**시나리오**: API Gateway가 특정 Lambda 함수를 호출할 수 있도록 Resource-based Policy(함수 정책) 설정.
+
+**핵심 메커니즘**:
+- Resource-based Policy: `Principal: {"Service": "apigateway.amazonaws.com"}`
+- Allow: `lambda:InvokeFunction`
+- Condition: `aws:SourceArn` → 특정 API Gateway 리소스 ARN (`arn:aws:execute-api:REGION:ACCOUNT:API_ID/*/METHOD/PATH`)
+
+**허용**: 지정 API Gateway 엔드포인트에서 Lambda 호출
+**거부**: 다른 API Gateway, 다른 서비스에서의 호출
+
+**주의사항**:
+- Resource-based Policy는 `aws lambda add-permission` CLI로 추가 — IAM 콘솔에서 직접 편집 불가
+- `aws:SourceArn`의 API Gateway ARN 형식: `arn:aws:execute-api:REGION:ACCOUNT:API_ID/STAGE/METHOD/RESOURCE_PATH`
+- `*`를 사용하면 모든 스테이지/메서드/경로 허용 — 최소 권한 원칙에 따라 범위 한정 권장
+- `aws:SourceAccount` 조건 추가로 confused deputy 방지
+- 같은 계정 내에서는 Resource-based Policy만으로 충분 — 호출자의 IAM Policy 불필요
 
 ---
 
