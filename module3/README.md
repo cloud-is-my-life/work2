@@ -24,7 +24,7 @@
 
 | # | 주제 | 바로가기 |
 |---|------|----------|
-| 1 | IAM 평가 로직/조건 키 치트시트 | [cheatsheet.md](./cheatsheet.md) |
+| 1 | IAM 평가 로직/조건 키 도우미 | [cheatsheet.md](./cheatsheet.md) |
 | 2 | 예시 과제 (예상 출제형) | [examples-questions/](./examples-questions/) |
 | 3 | 예시 과제 정답 풀이 | [examples-questions/answers/](./examples-questions/answers/) |
 | 4 | 정책 JSON 템플릿 | [policies/](./policies/) |

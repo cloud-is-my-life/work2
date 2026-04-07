@@ -1,4 +1,4 @@
-# Athena 치트시트 — DDL / DML / CLI / CTAS / Partition Projection
+# Athena 도우미 — DDL / DML / CLI / CTAS / Partition Projection
 
 ---
 

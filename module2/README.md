@@ -30,7 +30,7 @@
 
 | # | 주제 | 바로가기 |
 |---|------|----------|
-| 1 | Athena DDL/DML/CLI 치트시트 | [cheatsheet.md](./cheatsheet.md) |
+| 1 | Athena DDL/DML/CLI 도우미 | [cheatsheet.md](./cheatsheet.md) |
 | 2 | AWS 로그 분석 DDL 6종 | [log-ddl/](./log-ddl/) |
 | 3 | Glue Data Catalog + Crawler | [glue-guide.md](./glue-guide.md) |
 | 4 | S3 Select 레퍼런스 | [s3-select-guide.md](./s3-select-guide.md) |
