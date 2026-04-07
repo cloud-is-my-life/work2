@@ -1,0 +1,38 @@
+{
+  "_comment": "이미지 태그 immutability 설정 변경 차단 — PutImageTagMutability Deny로 리포지토리 설정 고정",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowPushPull",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeRepositories",
+        "ecr:DescribeImages",
+        "ecr:ListImages"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/*"
+    },
+    {
+      "Sid": "DenyTagMutabilityChange",
+      "Effect": "Deny",
+      "Action": [
+        "ecr:PutImageTagMutability",
+        "ecr:PutImageScanningConfiguration"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/*"
+    }
+  ]
+}

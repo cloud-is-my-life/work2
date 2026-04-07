@@ -1,0 +1,44 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCrossAccountRead",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::TRUSTED_ACCOUNT_ID:root"
+      },
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyNonTrustedAccounts",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "secretsmanager:*",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalAccount": [
+            "OWNER_ACCOUNT_ID",
+            "TRUSTED_ACCOUNT_ID"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyWithoutCMK",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "secretsmanager:KmsKeyArn": "arn:aws:kms:REGION:OWNER_ACCOUNT_ID:key/CMK_KEY_ID"
+        }
+      }
+    }
+  ]
+}

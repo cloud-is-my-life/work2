@@ -1,0 +1,102 @@
+{
+  "_comment": "Key Policy + IAM Policy 조합 실전. Root 위임 문장 유무에 따른 동작 차이를 두 시나리오로 비교.",
+  "_scenario_A": "Root 위임 문장 없음 — IAM Policy가 Allow해도 키 사용 불가 (가장 빈출 함정)",
+  "_scenario_B": "Root 위임 문장 있음 — IAM Policy의 Allow가 유효하게 동작",
+
+  "ScenarioA_KeyPolicy_WITHOUT_RootDelegation": {
+    "_comment": "Root 위임 없음. IAM Policy에서 아무리 Allow해도 이 Key Policy에 명시된 Principal만 사용 가능.",
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowKeyAdminOnly",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::ACCOUNT_ID:role/KEY_ADMIN_ROLE"
+        },
+        "Action": [
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Sid": "AllowKeyUserExplicit",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::ACCOUNT_ID:role/KEY_USER_ROLE"
+        },
+        "Action": [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ],
+        "Resource": "*"
+      }
+    ]
+  },
+
+  "ScenarioB_KeyPolicy_WITH_RootDelegation": {
+    "_comment": "Root 위임 있음. IAM Policy에서 Allow한 Principal은 Key Policy 명시 없이도 키 사용 가능.",
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowRootDelegation",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::ACCOUNT_ID:root"
+        },
+        "Action": "kms:*",
+        "Resource": "*"
+      },
+      {
+        "Sid": "AllowKeyAdminViaIAM",
+        "Effect": "Allow",
+        "Principal": {
+          "AWS": "arn:aws:iam::ACCOUNT_ID:role/KEY_ADMIN_ROLE"
+        },
+        "Action": [
+          "kms:Create*",
+          "kms:Describe*",
+          "kms:Enable*",
+          "kms:List*",
+          "kms:Put*",
+          "kms:Update*",
+          "kms:Revoke*",
+          "kms:Disable*",
+          "kms:Delete*",
+          "kms:ScheduleKeyDeletion",
+          "kms:CancelKeyDeletion"
+        ],
+        "Resource": "*"
+      }
+    ]
+  },
+
+  "ScenarioB_IAMPolicy_for_KeyUser": {
+    "_comment": "ScenarioB에서 KEY_USER_ROLE에 붙이는 IAM Policy. Root 위임이 있으므로 이 정책만으로 키 사용 가능.",
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "AllowKMSKeyUseViaIAM",
+        "Effect": "Allow",
+        "Action": [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey*",
+          "kms:DescribeKey"
+        ],
+        "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/KEY_ID"
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateTableOnlyWithRequiredTagsAndEncryption",
+      "Effect": "Allow",
+      "Action": "dynamodb:CreateTable",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Environment": ["production", "staging", "development"],
+          "aws:RequestTag/Owner": "${aws:username}"
+        },
+        "StringLike": {
+          "aws:RequestTag/Project": "*"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreateTableWithoutRequiredTags",
+      "Effect": "Deny",
+      "Action": "dynamodb:CreateTable",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Environment": "true",
+          "aws:RequestTag/Owner": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreateTableWithoutEncryption",
+      "Effect": "Deny",
+      "Action": "dynamodb:CreateTable",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/*",
+      "Condition": {
+        "StringNotEquals": {
+          "dynamodb:EncryptionType": "KMS"
+        }
+      }
+    },
+    {
+      "Sid": "AllowTaggingOnCreate",
+      "Effect": "Allow",
+      "Action": "dynamodb:TagResource",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Environment": ["production", "staging", "development"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribeAndList",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables",
+        "dynamodb:ListTagsOfResource"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

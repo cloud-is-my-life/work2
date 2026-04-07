@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFunctionManagement",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunction",
+        "lambda:ListFunctions"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyUnapprovedLayers",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionConfiguration"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAnyValue:StringNotEquals": {
+          "lambda:Layer": [
+            "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:layer:LAYER_NAME:1",
+            "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:layer:LAYER_NAME:2"
+          ]
+        }
+      }
+    }
+  ]
+}

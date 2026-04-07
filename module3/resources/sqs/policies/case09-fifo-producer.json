@@ -1,0 +1,25 @@
+{
+  "_comment": "FIFO 큐 전용 Producer IAM Policy. FIFO 큐는 MessageGroupId 필수 — IAM 권한과 무관하지만 누락 시 InvalidParameterValue 오류 발생. MessageDeduplicationId는 ContentBasedDeduplication 비활성화 시 필수.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFIFOProduce",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME.fifo",
+      "_comment_resource": "FIFO 큐 ARN은 반드시 .fifo 접미사 포함"
+    },
+    {
+      "Sid": "DenyNonFIFOQueues",
+      "Effect": "Deny",
+      "Action": "sqs:SendMessage",
+      "NotResource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME.fifo",
+      "_comment_deny": "NotResource로 지정 큐 외 모든 큐에 SendMessage 차단 — 실수로 Standard 큐에 전송하는 것 방지"
+    }
+  ]
+}

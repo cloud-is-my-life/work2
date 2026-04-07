@@ -1,0 +1,42 @@
+{
+  "_comment": "키 로테이션 활성화는 허용, 비활성화는 명시적 Deny. 로테이션 주기는 최대 365일로 제한.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowKeyRotationEnable",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/KEY_ADMIN_ROLE"
+      },
+      "Action": [
+        "kms:EnableKeyRotation",
+        "kms:GetKeyRotationStatus",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyKeyRotationDisable",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:DisableKeyRotation",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyExcessiveRotationPeriod",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:EnableKeyRotation",
+      "Resource": "*",
+      "Condition": {
+        "NumericGreaterThan": {
+          "kms:RotationPeriodInDays": "365"
+        }
+      }
+    }
+  ]
+}

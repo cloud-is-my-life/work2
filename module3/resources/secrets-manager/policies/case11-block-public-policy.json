@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPutResourcePolicy",
+      "Effect": "Allow",
+      "Action": "secretsmanager:PutResourcePolicy",
+      "Resource": "*"
+    },
+    {
+      "Sid": "BlockPublicResourcePolicy",
+      "Effect": "Deny",
+      "Action": "secretsmanager:PutResourcePolicy",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "secretsmanager:BlockPublicPolicy": "false"
+        }
+      }
+    },
+    {
+      "Sid": "AllowGetDeleteResourcePolicy",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetResourcePolicy",
+        "secretsmanager:DeleteResourcePolicy"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

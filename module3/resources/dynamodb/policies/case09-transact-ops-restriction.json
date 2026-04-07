@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowTransactOpsOwnItemsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:TransactWriteItems",
+        "dynamodb:TransactGetItems"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"]
+        },
+        "StringEquals": {
+          "dynamodb:EnclosingOperation": [
+            "TransactWriteItems",
+            "TransactGetItems"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowSingleOpsViaTransactionContext",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"]
+        },
+        "StringEquals": {
+          "dynamodb:EnclosingOperation": [
+            "TransactWriteItems",
+            "TransactGetItems"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyDirectWriteOutsideTransaction",
+      "Effect": "Deny",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "StringNotEquals": {
+          "dynamodb:EnclosingOperation": "TransactWriteItems"
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribeAndList",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

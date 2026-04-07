@@ -1,0 +1,77 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListAllowedPrefixFromAllowedIP",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::DATA_BUCKET",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["secure/*"]
+        },
+        "IpAddress": {
+          "aws:SourceIp": ["ALLOWED_CIDR_1", "ALLOWED_CIDR_2"]
+        },
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowGetObjectAllowedPrefixFromAllowedIP",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/secure/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": ["ALLOWED_CIDR_1", "ALLOWED_CIDR_2"]
+        },
+        "Bool": {
+          "aws:SecureTransport": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyNonTLS",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::DATA_BUCKET",
+        "arn:aws:s3:::DATA_BUCKET/*"
+      ],
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyOutsideAllowedIP",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::DATA_BUCKET",
+        "arn:aws:s3:::DATA_BUCKET/*"
+      ],
+      "Condition": {
+        "NotIpAddress": {
+          "aws:SourceIp": ["ALLOWED_CIDR_1", "ALLOWED_CIDR_2"]
+        },
+        "StringNotEquals": {
+          "aws:SourceVpce": "VPCE_ID"
+        }
+      }
+    },
+    {
+      "Sid": "DenyAccessOutsideSecurePrefix",
+      "Effect": "Deny",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "NotResource": "arn:aws:s3:::DATA_BUCKET/secure/*"
+    }
+  ]
+}

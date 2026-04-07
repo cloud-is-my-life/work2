@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFunctionUrlManagement",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:UpdateFunctionUrlConfig",
+        "lambda:DeleteFunctionUrlConfig",
+        "lambda:GetFunctionUrlConfig",
+        "lambda:ListFunctionUrlConfigs"
+      ],
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*"
+    },
+    {
+      "Sid": "DenyNonIAMFunctionUrl",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:CreateFunctionUrlConfig",
+        "lambda:UpdateFunctionUrlConfig"
+      ],
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*",
+      "Condition": {
+        "StringNotEquals": {
+          "lambda:FunctionUrlAuthType": "AWS_IAM"
+        }
+      }
+    },
+    {
+      "Sid": "DenyAddPermissionForNonIAMUrl",
+      "Effect": "Deny",
+      "Action": "lambda:AddPermission",
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*",
+      "Condition": {
+        "StringEquals": {
+          "lambda:FunctionUrlAuthType": "NONE"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstancesInstance",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*"
+    },
+    {
+      "Sid": "AllowRunInstancesApprovedSubnetsOnly",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/SUBNET_ID_PRIVATE_1",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/SUBNET_ID_PRIVATE_2"
+      ]
+    },
+    {
+      "Sid": "DenyRunInstancesOutsideApprovedVpc",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:Vpc": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:vpc/VPC_ID"
+        }
+      }
+    },
+    {
+      "Sid": "AllowRunInstancesSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION::image/ami-*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*"
+      ]
+    },
+    {
+      "Sid": "AllowDescribe",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSecurityGroups"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

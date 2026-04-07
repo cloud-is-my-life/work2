@@ -1,0 +1,28 @@
+{
+  "_comment": "DLQ Consumer IAM Policy — 소스 큐 KMS 키에 대한 kms:Decrypt 포함. DLQ에 저장된 메시지는 소스 큐의 KMS 키로 암호화되어 있으므로 Decrypt 권한 필수.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowDLQConsume",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:DLQ_QUEUE_NAME"
+    },
+    {
+      "Sid": "AllowKMSDecryptForDLQ",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "arn:aws:kms:AWS_REGION:ACCOUNT_ID:key/SOURCE_QUEUE_KMS_KEY_ID",
+      "_comment_resource": "소스 큐(원본 큐)에 설정된 KMS 키 ARN — DLQ 자체 키가 아님에 주의"
+    }
+  ]
+}

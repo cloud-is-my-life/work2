@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowPutMetricFilter",
+      "Effect": "Allow",
+      "Action": "logs:PutMetricFilter",
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:LOG_GROUP_NAME"
+    },
+    {
+      "Sid": "AllowDescribeMetricFilters",
+      "Effect": "Allow",
+      "Action": "logs:DescribeMetricFilters",
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:LOG_GROUP_NAME"
+    },
+    {
+      "Sid": "AllowDescribeLogGroups",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDeleteMetricFilter",
+      "Effect": "Deny",
+      "Action": "logs:DeleteMetricFilter",
+      "Resource": "*"
+    }
+  ]
+}

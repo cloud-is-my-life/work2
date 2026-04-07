@@ -1,0 +1,60 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAuthorizeSecurityGroupIngressRestrictedPorts",
+      "Effect": "Allow",
+      "Action": "ec2:AuthorizeSecurityGroupIngress",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+      "Condition": {
+        "IpAddress": {
+          "ec2:AuthorizedService": "PLACEHOLDER_NOT_APPLICABLE"
+        },
+        "StringEquals": {
+          "ec2:ResourceTag/AllowIngressManagement": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublicIngressOnSensitivePorts",
+      "Effect": "Deny",
+      "Action": "ec2:AuthorizeSecurityGroupIngress",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "0.0.0.0/0"
+        },
+        "StringEquals": {
+          "ec2:ResourceTag/Environment": "production"
+        }
+      }
+    },
+    {
+      "Sid": "DenyWildcardCidrOnAllSecurityGroups",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:AuthorizeSecurityGroupEgress"
+      ],
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": [
+            "0.0.0.0/0",
+            "::/0"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribeSecurityGroups",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSecurityGroupRules",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

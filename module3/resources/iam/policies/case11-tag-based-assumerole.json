@@ -1,0 +1,50 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAssumeRoleMatchingTeamTag",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/team-roles/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Team": "${aws:PrincipalTag/Team}"
+        }
+      }
+    },
+    {
+      "Sid": "AllowAssumeRoleMatchingEnvTag",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "arn:aws:iam::ACCOUNT_ID:role/env-roles/*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Environment": "${aws:PrincipalTag/Environment}"
+        }
+      }
+    },
+    {
+      "Sid": "DenyAssumeRoleIfTagMissing",
+      "Effect": "Deny",
+      "Action": "sts:AssumeRole",
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:role/team-roles/*",
+        "arn:aws:iam::ACCOUNT_ID:role/env-roles/*"
+      ],
+      "Condition": {
+        "Null": {
+          "aws:PrincipalTag/Team": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowListRolesForConsole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListRoles",
+        "iam:GetRole"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

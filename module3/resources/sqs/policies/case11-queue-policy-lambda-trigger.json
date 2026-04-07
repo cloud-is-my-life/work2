@@ -1,0 +1,26 @@
+{
+  "_comment": "Queue Policy — Lambda 트리거. Lambda 서비스가 SQS 큐에서 메시지를 수신하고 삭제할 수 있도록 허용. Event Source Mapping 설정 시 Lambda 실행 역할에도 동일 권한 필요.",
+  "Version": "2012-10-17",
+  "Id": "LambdaTriggerSQSPolicy",
+  "Statement": [
+    {
+      "Sid": "AllowLambdaToConsume",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME"
+        },
+        "_comment_condition": "Queue Policy의 lambda.amazonaws.com Principal은 같은 계정 내에서는 선택적. 크로스 계정 Lambda 트리거 시 필수. 실제 권한은 Lambda 실행 역할(IAM Role)의 Policy가 주 제어 포인트."
+      }
+    }
+  ]
+}

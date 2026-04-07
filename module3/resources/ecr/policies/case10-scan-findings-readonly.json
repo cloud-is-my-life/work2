@@ -1,0 +1,23 @@
+{
+  "_comment": "스캔 결과 조회 전용 — DescribeImageScanFindings만 허용. 보안팀/감사 역할에 부여하는 읽기 전용 정책.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowScanResultsReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:DescribeImageScanFindings",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/*"
+    }
+  ]
+}

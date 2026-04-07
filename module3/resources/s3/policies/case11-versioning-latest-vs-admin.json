@@ -1,0 +1,53 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadLatestVersionOnly",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*"
+    },
+    {
+      "Sid": "DenyGetSpecificVersion",
+      "Effect": "Deny",
+      "Action": "s3:GetObjectVersion",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::ACCOUNT_ID:role/S3VersionAdminRole",
+            "arn:aws:iam::ACCOUNT_ID:user/s3-version-admin"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowAdminFullVersionAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObjectVersion",
+        "s3:DeleteObjectVersion",
+        "s3:ListBucketVersions",
+        "s3:RestoreObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::DATA_BUCKET",
+        "arn:aws:s3:::DATA_BUCKET/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::ACCOUNT_ID:role/S3VersionAdminRole",
+            "arn:aws:iam::ACCOUNT_ID:user/s3-version-admin"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowListBucket",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::DATA_BUCKET"
+    }
+  ]
+}

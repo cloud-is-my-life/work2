@@ -1,0 +1,59 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstancesApprovedAMIOnly",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION::image/ami-*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ImageId": [
+            "ami-APPROVED_AMI_ID_1",
+            "ami-APPROVED_AMI_ID_2"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowRunInstancesSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*"
+      ]
+    },
+    {
+      "Sid": "DenyUnapprovedAMI",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION::image/ami-*",
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:ImageId": [
+            "ami-APPROVED_AMI_ID_1",
+            "ami-APPROVED_AMI_ID_2"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowDescribe",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeImages",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeKeyPairs",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

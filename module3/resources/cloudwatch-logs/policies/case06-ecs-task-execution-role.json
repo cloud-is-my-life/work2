@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateLogGroup",
+      "Effect": "Allow",
+      "Action": "logs:CreateLogGroup",
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:/ecs/TASK_DEFINITION_NAME"
+    },
+    {
+      "Sid": "AllowECSLogging",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:AWS_REGION:ACCOUNT_ID:log-group:/ecs/TASK_DEFINITION_NAME:*"
+    },
+    {
+      "Sid": "AllowDescribeLogGroups",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
+      "Resource": "*"
+    }
+  ]
+}

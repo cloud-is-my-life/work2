@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSNSActions",
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish",
+        "sns:Subscribe",
+        "sns:GetTopicAttributes",
+        "sns:ListTopics"
+      ],
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME"
+    },
+    {
+      "Sid": "DenyNonTLS",
+      "Effect": "Deny",
+      "Action": "sns:*",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}

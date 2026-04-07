@@ -1,0 +1,46 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowOwnRowsAndSpecificColumnsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"],
+          "dynamodb:Attributes": [
+            "UserId",
+            "Name",
+            "Email",
+            "Score",
+            "UpdatedAt"
+          ]
+        },
+        "StringEqualsIfExists": {
+          "dynamodb:Select": "SPECIFIC_ATTRIBUTES",
+          "dynamodb:ReturnValues": ["NONE", "UPDATED_OLD", "UPDATED_NEW"]
+        }
+      }
+    },
+    {
+      "Sid": "DenyAllScan",
+      "Effect": "Deny",
+      "Action": "dynamodb:Scan",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME"
+    },
+    {
+      "Sid": "AllowDescribeAndList",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

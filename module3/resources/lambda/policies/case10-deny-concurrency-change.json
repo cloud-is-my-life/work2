@@ -1,0 +1,32 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLambdaGeneralManagement",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:ListFunctions",
+        "lambda:UpdateFunctionCode",
+        "lambda:PublishVersion",
+        "lambda:CreateAlias",
+        "lambda:UpdateAlias",
+        "lambda:GetFunctionConcurrency",
+        "lambda:ListProvisionedConcurrencyConfigs",
+        "lambda:GetProvisionedConcurrencyConfig"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyConcurrencyModification",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:PutFunctionConcurrency",
+        "lambda:DeleteFunctionConcurrency",
+        "lambda:PutProvisionedConcurrencyConfig",
+        "lambda:DeleteProvisionedConcurrencyConfig"
+      ],
+      "Resource": "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:*"
+    }
+  ]
+}

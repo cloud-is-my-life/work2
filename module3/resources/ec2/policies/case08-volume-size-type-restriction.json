@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowRunInstancesInstance",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:instance/*"
+    },
+    {
+      "Sid": "AllowRunInstancesVolumeWithConstraints",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:VolumeType": ["gp3", "gp2"]
+        },
+        "NumericLessThanEquals": {
+          "ec2:VolumeSize": "100"
+        }
+      }
+    },
+    {
+      "Sid": "DenyOversizedVolume",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+      "Condition": {
+        "NumericGreaterThan": {
+          "ec2:VolumeSize": "100"
+        }
+      }
+    },
+    {
+      "Sid": "DenyNonApprovedVolumeType",
+      "Effect": "Deny",
+      "Action": "ec2:RunInstances",
+      "Resource": "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:volume/*",
+      "Condition": {
+        "StringNotEquals": {
+          "ec2:VolumeType": ["gp3", "gp2"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowRunInstancesSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:network-interface/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:security-group/*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:subnet/*",
+        "arn:aws:ec2:AWS_REGION::image/ami-*",
+        "arn:aws:ec2:AWS_REGION:ACCOUNT_ID:key-pair/*"
+      ]
+    },
+    {
+      "Sid": "AllowDescribe",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeImages",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

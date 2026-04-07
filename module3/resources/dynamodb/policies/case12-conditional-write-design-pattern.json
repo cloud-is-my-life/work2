@@ -1,0 +1,63 @@
+{
+  "Version": "2012-10-17",
+  "_comment": "IAM으로 ConditionExpression 자체를 강제하는 것은 불가능합니다. 이 정책은 설계 보완 패턴을 보여줍니다: (1) UpdateItem만 허용하고 PutItem을 제외해 전체 덮어쓰기를 차단, (2) ReturnValues를 UPDATED_NEW로 제한해 변경 감사 가능하게 유지, (3) 실제 ConditionExpression 강제는 애플리케이션 레이어 또는 Lambda authorizer에서 구현해야 합니다.",
+  "Statement": [
+    {
+      "Sid": "AllowConditionalWritePatternUpdateOnly",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"]
+        },
+        "StringEquals": {
+          "dynamodb:ReturnValues": ["NONE", "UPDATED_NEW", "UPDATED_OLD"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowReadOwnItems",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+      ],
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME",
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": ["${aws:username}"]
+        }
+      }
+    },
+    {
+      "Sid": "DenyPutItemToPreventBlindOverwrite",
+      "Effect": "Deny",
+      "Action": "dynamodb:PutItem",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME"
+    },
+    {
+      "Sid": "DenyDeleteItemToPreventUnconditionalDelete",
+      "Effect": "Deny",
+      "Action": "dynamodb:DeleteItem",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME"
+    },
+    {
+      "Sid": "DenyScanAlways",
+      "Effect": "Deny",
+      "Action": "dynamodb:Scan",
+      "Resource": "arn:aws:dynamodb:AWS_REGION:ACCOUNT_ID:table/TABLE_NAME"
+    },
+    {
+      "Sid": "AllowDescribeAndList",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:ListTables"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "_comment": "큐 설정 변경 차단 IAM Policy — SetQueueAttributes Deny로 DLQ 설정, 메시지 보존기간, 암호화(SSE-KMS) 설정 변경 보호. 일반 사용자는 Send/Receive만 가능.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowNormalQueueUsage",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME"
+    },
+    {
+      "Sid": "DenyQueueConfigChanges",
+      "Effect": "Deny",
+      "Action": [
+        "sqs:SetQueueAttributes",
+        "sqs:DeleteQueue",
+        "sqs:PurgeQueue",
+        "sqs:AddPermission",
+        "sqs:RemovePermission",
+        "sqs:TagQueue",
+        "sqs:UntagQueue"
+      ],
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "_comment_deny": "SetQueueAttributes 하나로 DLQ 연결, VisibilityTimeout, MessageRetentionPeriod, KmsMasterKeyId 등 모든 큐 속성 변경 가능 — Explicit Deny 필수. Deny는 Allow보다 항상 우선."
+    }
+  ]
+}

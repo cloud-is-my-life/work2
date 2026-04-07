@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCodeDeployOnly",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:UpdateFunctionCode",
+        "lambda:PublishVersion",
+        "lambda:CreateAlias",
+        "lambda:UpdateAlias",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:ListVersionsByFunction",
+        "lambda:ListAliases"
+      ],
+      "Resource": [
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME",
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME:*"
+      ]
+    },
+    {
+      "Sid": "AllowListFunctions",
+      "Effect": "Allow",
+      "Action": "lambda:ListFunctions",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyEnvVarAndConfigChange",
+      "Effect": "Deny",
+      "Action": "lambda:UpdateFunctionConfiguration",
+      "Resource": [
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME",
+        "arn:aws:lambda:AWS_REGION:ACCOUNT_ID:function:FUNCTION_NAME:*"
+      ]
+    }
+  ]
+}

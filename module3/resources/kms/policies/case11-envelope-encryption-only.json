@@ -1,0 +1,40 @@
+{
+  "_comment": "봉투 암호화 전용 키. GenerateDataKey* 만 허용하고 직접 Encrypt/Decrypt는 명시적 Deny.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowEnvelopeEncryptionOnly",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/APP_ROLE"
+      },
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyWithoutPlaintext",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDirectEncryptDecrypt",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncryptFrom",
+        "kms:ReEncryptTo"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalArn": [
+            "arn:aws:iam::ACCOUNT_ID:role/KEY_ADMIN_ROLE"
+          ]
+        }
+      }
+    }
+  ]
+}

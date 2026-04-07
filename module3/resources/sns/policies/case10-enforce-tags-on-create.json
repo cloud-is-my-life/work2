@@ -1,0 +1,54 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCreateTopicWithRequiredTags",
+      "Effect": "Allow",
+      "Action": "sns:CreateTopic",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Environment": ["prod", "staging", "dev"]
+        },
+        "Null": {
+          "aws:RequestTag/Team": "false",
+          "aws:RequestTag/Environment": "false"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreateTopicWithoutRequiredTags",
+      "Effect": "Deny",
+      "Action": "sns:CreateTopic",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Team": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DenyCreateTopicWithoutEnvironmentTag",
+      "Effect": "Deny",
+      "Action": "sns:CreateTopic",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Environment": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowTagResourceOnCreate",
+      "Effect": "Allow",
+      "Action": "sns:TagResource",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:*",
+      "Condition": {
+        "Null": {
+          "aws:RequestTag/Team": "false",
+          "aws:RequestTag/Environment": "false"
+        }
+      }
+    }
+  ]
+}

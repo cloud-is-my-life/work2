@@ -1,0 +1,50 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyIfUsernameTagMissing",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": "*",
+      "Condition": {
+        "Null": {
+          "aws:username": "true"
+        }
+      }
+    },
+    {
+      "Sid": "AllowListOwnHomePrefix",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::DATA_BUCKET",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "home/${aws:username}/",
+            "home/${aws:username}/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowReadWriteOwnHomeObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::DATA_BUCKET/home/${aws:username}/*"
+    },
+    {
+      "Sid": "DenyAccessOtherUsersHome",
+      "Effect": "Deny",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "NotResource": "arn:aws:s3:::DATA_BUCKET/home/${aws:username}/*"
+    }
+  ]
+}

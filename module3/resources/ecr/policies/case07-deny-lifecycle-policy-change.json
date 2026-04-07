@@ -1,0 +1,38 @@
+{
+  "_comment": "Lifecycle Policy 변경 차단 — PutLifecyclePolicy / DeleteLifecyclePolicy Deny로 자동 삭제 규칙 보호",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowPushPull",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeRepositories",
+        "ecr:DescribeImages",
+        "ecr:ListImages"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/*"
+    },
+    {
+      "Sid": "DenyLifecyclePolicyChange",
+      "Effect": "Deny",
+      "Action": [
+        "ecr:PutLifecyclePolicy",
+        "ecr:DeleteLifecyclePolicy"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/*"
+    }
+  ]
+}

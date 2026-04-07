@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowListBucket",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::DATA_BUCKET",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": ["uploads/*"]
+        }
+      }
+    },
+    {
+      "Sid": "AllowGetObject",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/uploads/*"
+    },
+    {
+      "Sid": "AllowPutObjectWithSizeLimit",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/uploads/*",
+      "Condition": {
+        "NumericLessThanEquals": {
+          "s3:content-length-range": 10485760
+        }
+      }
+    },
+    {
+      "Sid": "DenyPutObjectExceedsSizeLimit",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/uploads/*",
+      "Condition": {
+        "NumericGreaterThan": {
+          "s3:content-length-range": 10485760
+        }
+      }
+    },
+    {
+      "Sid": "DenyPutObjectMissingContentLength",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::DATA_BUCKET/uploads/*",
+      "Condition": {
+        "Null": {
+          "s3:content-length-range": "true"
+        }
+      }
+    }
+  ]
+}

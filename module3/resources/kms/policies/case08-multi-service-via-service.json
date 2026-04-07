@@ -1,0 +1,52 @@
+{
+  "_comment": "S3 + Secrets Manager + SSM 세 서비스 경유 요청만 허용. 직접 KMS API 호출은 차단.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowViaMultipleServices",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/APP_ROLE"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": [
+            "s3.AWS_REGION.amazonaws.com",
+            "secretsmanager.AWS_REGION.amazonaws.com",
+            "ssm.AWS_REGION.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyDirectKMSCalls",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "arn:aws:iam::ACCOUNT_ID:role/APP_ROLE"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "kms:ViaService": [
+            "s3.AWS_REGION.amazonaws.com",
+            "secretsmanager.AWS_REGION.amazonaws.com",
+            "ssm.AWS_REGION.amazonaws.com"
+          ]
+        }
+      }
+    }
+  ]
+}

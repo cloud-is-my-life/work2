@@ -1,0 +1,22 @@
+{
+  "_comment": "Queue Policy — EventBridge → SQS. EventBridge 규칙이 SQS 큐를 타겟으로 메시지를 전송할 수 있도록 허용. aws:SourceArn으로 특정 규칙만 허용해 혼동 대리인 공격 방지.",
+  "Version": "2012-10-17",
+  "Id": "EventBridgeToSQSPolicy",
+  "Statement": [
+    {
+      "Sid": "AllowEventBridgeToSend",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Action": "sqs:SendMessage",
+      "Resource": "arn:aws:sqs:AWS_REGION:ACCOUNT_ID:QUEUE_NAME",
+      "Condition": {
+        "ArnLike": {
+          "aws:SourceArn": "arn:aws:events:AWS_REGION:ACCOUNT_ID:rule/RULE_NAME"
+        },
+        "_comment_condition": "aws:SourceArn 없이 events.amazonaws.com만 허용하면 같은 리전의 모든 EventBridge 규칙이 전송 가능 — 반드시 특정 규칙 ARN으로 제한"
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyModifyBoundaryPolicyItself",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:policy/DeveloperBoundary"
+    },
+    {
+      "Sid": "DenyModifyAnyBoundaryPolicy",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicyVersion",
+        "iam:SetDefaultPolicyVersion",
+        "iam:DeletePolicy",
+        "iam:DeletePolicyVersion"
+      ],
+      "Resource": "arn:aws:iam::ACCOUNT_ID:policy/Boundary*"
+    },
+    {
+      "Sid": "DenyDetachBoundaryFromSelf",
+      "Effect": "Deny",
+      "Action": [
+        "iam:DeleteUserPermissionsBoundary",
+        "iam:DeleteRolePermissionsBoundary"
+      ],
+      "Resource": [
+        "arn:aws:iam::ACCOUNT_ID:user/${aws:username}",
+        "arn:aws:iam::ACCOUNT_ID:role/app-roles/*"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCrossAccountPublishWithinOrg",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "o-ORGANIZATION_ID"
+        }
+      }
+    },
+    {
+      "Sid": "DenyPublishOutsideOrg",
+      "Effect": "Deny",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:AWS_REGION:ACCOUNT_ID:TOPIC_NAME",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalOrgID": "o-ORGANIZATION_ID"
+        }
+      }
+    }
+  ]
+}

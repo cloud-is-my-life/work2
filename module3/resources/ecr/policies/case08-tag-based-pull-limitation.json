@@ -1,0 +1,36 @@
+{
+  "_comment": "ECR은 이미지 태그(imageTag) 기반 IAM 조건을 지원하지 않음. Pull 허용 범위는 리포지토리 ARN 수준까지만 가능. 태그별 접근 제어가 필요하면 리포지토리를 분리(prod-repo / dev-repo)하거나 OCI Artifact 레이어 서명(Notation/Cosign)을 조합해야 함.",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowAuth",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowPullFromProdRepoOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:DescribeImages",
+        "ecr:ListImages"
+      ],
+      "Resource": "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/prod-*"
+    },
+    {
+      "Sid": "DenyPullFromNonProdRepo",
+      "Effect": "Deny",
+      "Action": [
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ],
+      "Resource": [
+        "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/dev-*",
+        "arn:aws:ecr:AWS_REGION:ACCOUNT_ID:repository/staging-*"
+      ]
+    }
+  ]
+}
