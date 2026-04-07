@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowParameterRead",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:DescribeParameters"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyGetParameterHistory",
+      "Effect": "Deny",
+      "Action": "ssm:GetParameterHistory",
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/*"
+    }
+  ]
+}

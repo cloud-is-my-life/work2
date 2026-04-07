@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLambdaSSMReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/lambda/*"
+    },
+    {
+      "Sid": "AllowDescribeParameters",
+      "Effect": "Allow",
+      "Action": "ssm:DescribeParameters",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyAllWrite",
+      "Effect": "Deny",
+      "Action": [
+        "ssm:PutParameter",
+        "ssm:DeleteParameter",
+        "ssm:DeleteParameters",
+        "ssm:LabelParameterVersion",
+        "ssm:UnlabelParameterVersion",
+        "ssm:AddTagsToResource",
+        "ssm:RemoveTagsFromResource"
+      ],
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/lambda/*"
+    },
+    {
+      "Sid": "DenyGetHistory",
+      "Effect": "Deny",
+      "Action": "ssm:GetParameterHistory",
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/lambda/*"
+    }
+  ]
+}

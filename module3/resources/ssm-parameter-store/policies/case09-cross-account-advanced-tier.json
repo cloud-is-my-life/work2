@@ -1,0 +1,41 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadAdvancedTierCrossAccount",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      "Resource": "arn:aws:ssm:REGION:SOURCE_ACCOUNT_ID:parameter/shared/*"
+    },
+    {
+      "Sid": "AllowDescribeParameters",
+      "Effect": "Allow",
+      "Action": "ssm:DescribeParameters",
+      "Resource": "*"
+    },
+    {
+      "Sid": "AllowKMSDecryptForSharedParams",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:REGION:SOURCE_ACCOUNT_ID:key/CMK_KEY_ID"
+    },
+    {
+      "Sid": "DenyNonAdvancedTierWrite",
+      "Effect": "Deny",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/*",
+      "Condition": {
+        "StringNotEquals": {
+          "ssm:Tier": "Advanced"
+        }
+      }
+    }
+  ]
+}

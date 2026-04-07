@@ -139,3 +139,4 @@ S3 IAM에서 가장 많이 틀리는 부분이다. 버킷 ARN과 오브젝트 AR
 외부 계정에 prefix 읽기 권한 부여. 크로스 계정은 Bucket Policy + 상대 계정 IAM Policy 양쪽 모두 Allow 필요.
 
 ---
+test

@@ -1,0 +1,33 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowStringAndStringListCreate",
+      "Effect": "Allow",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/*"
+    },
+    {
+      "Sid": "AllowReadAndDescribe",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:DescribeParameters"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenySecureStringCreate",
+      "Effect": "Deny",
+      "Action": "ssm:PutParameter",
+      "Resource": "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/*",
+      "Condition": {
+        "StringEquals": {
+          "ssm:ParamType": "SecureString"
+        }
+      }
+    }
+  ]
+}
